@@ -2,6 +2,12 @@ TARGETS = opam-file-format.cma opam-file-format.cmxa
 
 all: $(TARGETS)
 
+byte: $(filter %.cma,$(TARGETS))
+	:
+
+native: $(filter %.cmxa,$(TARGETS))
+	:
+
 %:
 	make -C src $@
 
