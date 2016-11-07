@@ -1,7 +1,6 @@
 (**************************************************************************)
 (*                                                                        *)
-(*    Copyright 2012-2015 OCamlPro                                        *)
-(*    Copyright 2012 INRIA                                                *)
+(*    Copyright 2016 OCamlPro                                             *)
 (*                                                                        *)
 (*  All rights reserved. This file is distributed under the terms of the  *)
 (*  GNU Lesser General Public License version 2.1, with the special       *)
@@ -9,19 +8,15 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM config file lexer *)
-
 open OpamParserTypes
 
-exception Error of string
+(** Raw OpamBaseParser main entry point *)
+val main:
+  (Lexing.lexbuf  -> OpamBaseParser.token) ->
+  Lexing.lexbuf -> file_name -> opamfile
 
-val relop: string -> relop
+val string: string -> file_name -> opamfile
 
-val logop: string -> logop
+val channel: in_channel -> file_name -> opamfile
 
-val pfxop: string -> pfxop
-
-val env_update_op: string -> env_update_op
-
-
-val token: Lexing.lexbuf -> OpamBaseParser.token
+val file: file_name -> opamfile

@@ -12,7 +12,7 @@
 {
 
 open OpamParserTypes
-open OpamParser
+open OpamBaseParser
 
 exception Error of string
 

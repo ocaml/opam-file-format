@@ -13,8 +13,10 @@ type relop = [ `Eq | `Neq | `Geq | `Gt | `Leq | `Lt ]
 type logop = [ `And | `Or ]
 type pfxop = [ `Not ]
 
+type file_name = string
+
 (** Source file positions: filename, line, column *)
-type pos = string * int * int
+type pos = file_name * int * int
 
 type env_update_op = Eq | PlusEq | EqPlus | ColonEq | EqColon | EqPlusEq
 
@@ -48,6 +50,5 @@ and opamfile_item =
 (** A file is a list of items and the filename *)
 type opamfile = {
   file_contents: opamfile_item list;
-  file_name    : string;
+  file_name    : file_name;
 }
-
