@@ -209,5 +209,6 @@ module Normalise = struct
   let items its =
     let its = List.sort item_order its in
     String.concat "\n" (List.map item its) ^ "\n"
-end
 
+  let opamfile f = items f.file_contents
+end

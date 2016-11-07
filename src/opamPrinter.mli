@@ -39,5 +39,6 @@ module Normalise : sig
   val item : opamfile_item -> string
   val item_order : opamfile_item -> opamfile_item -> int
   val items : opamfile_item list -> string
+  val opamfile : opamfile -> string
 end
 
