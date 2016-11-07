@@ -9,7 +9,7 @@ native: $(filter %.cmxa,$(TARGETS))
 	:
 
 %:
-	make -C src $@
+	$(MAKE) -C src $@
 
 PREFIX ?= /usr/local
 LIBDIR ?= $(PREFIX)/lib
