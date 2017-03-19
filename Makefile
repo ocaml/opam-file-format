@@ -17,7 +17,7 @@ LIBDIR ?= $(PREFIX)/lib
 install:
 	mkdir -p $(DESTDIR)$(LIBDIR)/opam-file-format
 	install -m 0644 \
-	  $(wildcard $(addprefix src/*.,cmi cmo cmx cmti a cma cmxa)) src/META \
+	  $(wildcard $(addprefix src/*.,cmi cmo cmx cmti lib a cma cmxa)) src/META \
 	  $(DESTDIR)$(LIBDIR)/opam-file-format/
 
 uninstall:
