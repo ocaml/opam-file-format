@@ -25,6 +25,7 @@ let logop = function
 
 let pfxop = function
   | `Not -> "!"
+  | `Defined -> "?"
 
 let env_update_op = function
   | Eq -> "="
