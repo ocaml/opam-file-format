@@ -36,6 +36,7 @@ let logop = function
 
 let pfxop = function
   | "!" -> `Not
+  | "?" -> `Defined
   | x -> error "%S is not a valid prefix operator" x
 
 let env_update_op = function
@@ -88,7 +89,7 @@ let id     = ichar* alpha ichar*
 let ident  = (id | '_') ('+' (id | '_'))* (':' id)?
 
 let relop  = ('!'? '=' | [ '<' '>' ] '='?)
-let pfxop  = '!'
+let pfxop  = '!' | '?'
 let envop_char = [ '+' ':' ]
 let envop = (envop_char '=' | '=' envop_char '='?)
 let int    = ('-'? ['0'-'9' '_']+)
