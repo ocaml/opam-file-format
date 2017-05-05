@@ -20,3 +20,6 @@ val string: string -> file_name -> opamfile
 val channel: in_channel -> file_name -> opamfile
 
 val file: file_name -> opamfile
+
+(** Parse a string to a single value *)
+val value_of_string: ?pos:Lexing.position -> string -> value

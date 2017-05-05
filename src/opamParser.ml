@@ -26,3 +26,15 @@ let file filename =
   let ic = open_in filename in
   try channel ic filename
   with e -> close_in ic; raise e
+
+let value_of_string ?pos str =
+  let lexbuf = Lexing.from_string str in
+  begin match pos with
+    | Some pos -> lexbuf.Lexing.lex_curr_p <- pos
+    | None -> ()
+  end;
+  try
+    let v = OpamBaseParser.value OpamLexer.token lexbuf in
+    Parsing.clear_parser ();
+    v
+  with e -> Parsing.clear_parser (); raise e
