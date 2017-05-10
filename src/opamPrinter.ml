@@ -213,3 +213,89 @@ module Normalise = struct
 
   let opamfile f = items f.file_contents
 end
+
+module Preserved = struct
+  let items txt orig f =
+    let pos_index =
+      let lines_index =
+        let rec aux acc s =
+          let until =
+            try Some (String.index_from s (List.hd acc) '\n')
+            with Not_found -> None
+          in
+          match until with
+          | Some until -> aux (until+1 :: acc) s
+          | None -> Array.of_list (List.rev acc)
+        in
+        aux [0] txt
+      in
+      fun (_file, li, col) -> lines_index.(li - 1) + col
+    in
+    let get_substring start_pos rest =
+      let start = pos_index start_pos in
+      let stop = match rest with
+        | (Section (pos,_) | Variable (pos,_,_)) :: _ -> pos_index pos
+        | [] -> String.length txt
+      in
+      if stop < start then raise Exit
+      else String.sub txt start (stop - start)
+    in
+    let list_take f l =
+      let rec aux acc = function
+        | [] -> None, List.rev acc
+        | x::r ->
+          if f x then Some x, List.rev_append acc r
+          else aux (x::acc) r
+      in
+      aux [] l
+    in
+    let is_variable name = function
+      | Variable (_, name1, v1) -> name = name1
+      | _ -> false
+    in
+    let is_section name = function
+      | Section (_, {section_kind; _}) -> name = section_kind
+      | _ -> false
+    in
+    let rec aux acc f = function
+      | Variable (pos, name, v) :: r ->
+        (match list_take (is_variable name) f with
+         | Some (Variable (_, _, v1)), f when v = v1 ->
+           aux (get_substring pos r :: acc) f r
+         | Some item, f ->
+           aux ((items [item] ^ "\n") :: acc) f r
+         | None, f ->
+           aux acc f r)
+      | Section (pos, sec) :: r ->
+        (match list_take (is_section sec.section_kind) f with
+         | Some (Section (_, sec1)), f when sec = sec1 ->
+           aux (get_substring pos r :: acc) f r
+         | Some item, f ->
+           aux ((items [item] ^ "\n") :: acc) f r
+         | None, f -> aux acc f r)
+      | [] ->
+        let remaining = match f with
+          | [] -> []
+          | f -> [items f ^ "\n"]
+        in
+        List.rev_append acc remaining
+    in
+    let header = [get_substring ("",1,0) orig] in
+    String.concat "" (aux header f orig)
+
+  let opamfile ?format_from f =
+    let orig_file = match format_from with
+      | Some name -> name
+      | None -> f.file_name
+    in
+    let txt =
+      let b = Buffer.create 4096 in
+      let ic = open_in orig_file in
+      try while true do Buffer.add_channel b ic 4096 done; assert false with
+      | End_of_file -> close_in ic; Buffer.contents b
+      | e -> close_in ic; raise e
+    in
+    let orig = OpamParser.string txt orig_file in
+    items txt orig.file_contents f.file_contents
+
+end

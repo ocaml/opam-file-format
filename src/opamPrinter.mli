@@ -42,3 +42,17 @@ module Normalise : sig
   val opamfile : opamfile -> string
 end
 
+(** {2 Format-preserving reprinter} *)
+
+module Preserved : sig
+  (** [items str orig_its its] converts [its] to string, while attempting to
+      preserve the layout and comments of the original [str] for unmodified
+      elements. The function assumes that [str] parses to the items
+      [orig_its]. *)
+  val items: string -> opamfile_item list -> opamfile_item list -> string
+
+  (** [opamfile f] converts [f] to string, respecting the layout and comments in
+      the corresponding on-disk file for unmodified items. [format_from] can be
+      specified instead of using the filename specified in [f]. *)
+  val opamfile: ?format_from:file_name -> opamfile -> string
+end
