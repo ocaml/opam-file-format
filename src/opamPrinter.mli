@@ -56,3 +56,11 @@ module Preserved : sig
       specified instead of using the filename specified in [f]. *)
   val opamfile: ?format_from:file_name -> opamfile -> string
 end
+
+(** {2 Random utility functions} *)
+
+(** Compares structurally, without considering file positions *)
+val value_equals: value -> value -> bool
+
+(** Compares structurally, without considering file positions *)
+val opamfile_item_equals: opamfile_item -> opamfile_item -> bool
