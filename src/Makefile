@@ -27,6 +27,9 @@ opam-file-format.cma: $(MODULES:%=%.cmo)
 opam-file-format.cmxa: $(MODULES:%=%.cmx)
 	ocamlopt -a $^ -o $@
 
+opam-file-format.cmxs: $(MODULES:%=%.cmx)
+	ocamlopt -shared $^ -o $@
+
 .PHONY: clean
 clean:
 	rm -f *.cm* *.o *.a $(GENERATED) .depend
