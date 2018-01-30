@@ -27,6 +27,7 @@ let relop = function
   | ">"  -> `Gt
   | "<=" -> `Leq
   | "<"  -> `Lt
+  | "~"  -> `Geq
   | x    -> error "%S is not a valid comparison operator" x
 
 let logop = function
@@ -88,7 +89,7 @@ let ichar  = alpha | digit | ['_' '-']
 let id     = ichar* alpha ichar*
 let ident  = (id | '_') ('+' (id | '_'))* (':' id)?
 
-let relop  = ('!'? '=' | [ '<' '>' ] '='?)
+let relop  = ('!'? '=' | [ '<' '>' ] '='? | '~')
 let pfxop  = '!' | '?'
 let envop_char = [ '+' ':' ]
 let envop = (envop_char '=' | '=' envop_char '='?)

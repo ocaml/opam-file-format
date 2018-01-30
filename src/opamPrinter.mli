@@ -13,11 +13,11 @@
 
 open OpamParserTypes
 
-val relop: relop -> string
+val relop: [< relop ] -> string
 
-val logop: logop -> string
+val logop: [< logop ] -> string
 
-val pfxop: pfxop -> string
+val pfxop: [< pfxop ] -> string
 
 val env_update_op: env_update_op -> string
 

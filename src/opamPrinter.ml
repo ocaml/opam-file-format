@@ -18,6 +18,7 @@ let relop = function
   | `Gt  -> ">"
   | `Leq -> "<="
   | `Lt  -> "<"
+  | `Sem -> "~"
 
 let logop = function
   | `And -> "&"
