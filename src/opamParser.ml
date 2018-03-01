@@ -23,7 +23,10 @@ let parse_from_channel parse_fun ic filename =
 
 let parse_from_file parse_fun filename =
   let ic = open_in filename in
-  try parse_from_channel parse_fun ic filename
+  try
+    let r = parse_from_channel parse_fun ic filename in
+    close_in ic;
+    r
   with e -> close_in ic; raise e
 
 (** raw parser entry points *)
