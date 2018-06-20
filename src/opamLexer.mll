@@ -80,7 +80,9 @@ let buffer_rule r lb =
   Buffer.contents b
 }
 
-let space  = [' ' '\t' '\r']
+let eol = '\r'? '\n'
+
+let space  = [' ' '\t']
 
 let alpha  = ['a'-'z' 'A'-'Z']
 let digit  = ['0'-'9']
@@ -97,7 +99,7 @@ let int    = ('-'? ['0'-'9' '_']+)
 
 rule token = parse
 | space  { token lexbuf }
-| '\n'   { newline lexbuf; token lexbuf }
+| eol    { newline lexbuf; token lexbuf }
 | ":"    { COLON }
 | "{"    { LBRACE }
 | "}"    { RBRACE }
