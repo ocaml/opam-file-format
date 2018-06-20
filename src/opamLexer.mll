@@ -147,7 +147,7 @@ and string_triple b = parse
 | eof     { error "unterminated string" }
 
 and escape = parse
-| '\n' space *
+| eol space *
           { newline lexbuf; None }
 | ['\\' '\"' ''' 'n' 'r' 't' 'b' ' '] as c
           { Some (char_for_backslash c) }
