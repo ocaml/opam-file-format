@@ -69,10 +69,14 @@ let rec format_value fmt = function
   | Int (_,i)       -> Format.fprintf fmt "%d" i
   | Bool (_,b)      -> Format.fprintf fmt "%b" b
   | String (_,s)    ->
-    if String.contains s '\n'
-    then Format.fprintf fmt "\"\"\"\n%s\"\"\""
-        (escape_string ~triple:true s)
-    else Format.fprintf fmt "\"%s\"" (escape_string s)
+    if String.contains s '\n' then
+      let s = escape_string ~triple:true s in
+      if s.[0] = '\n' then
+        Format.fprintf fmt "\"\"\"%s\"\"\"" s
+      else
+        Format.fprintf fmt "\"\"\"\\\n%s\"\"\"" s
+    else
+      Format.fprintf fmt "\"%s\"" (escape_string s)
   | List (_, l) ->
     Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
   | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
