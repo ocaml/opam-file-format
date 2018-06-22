@@ -25,7 +25,9 @@ val value : value -> string
 
 val value_list: value list -> string
 
-val items: opamfile_item list -> string
+val items: bool -> opamfile_item list -> string
+(** [items crlf_eol l] converts [l] to a string. [crlf_eol] controls the
+    conversion of line endings to CRLF. *)
 
 val opamfile: opamfile -> string
 
@@ -45,11 +47,14 @@ end
 (** {2 Format-preserving reprinter} *)
 
 module Preserved : sig
-  (** [items str orig_its its] converts [its] to string, while attempting to
-      preserve the layout and comments of the original [str] for unmodified
-      elements. The function assumes that [str] parses to the items
-      [orig_its]. *)
-  val items: string -> opamfile_item list -> opamfile_item list -> string
+  val items: string -> bool -> opamfile_item list -> opamfile_item list -> string
+  (** [items str orig_crlf orig_its its] converts [its] to a string, while
+      attempting to preserve the layout and comments of the original [str] for
+      unmodified elements. The function assumes that [str] parses to the items
+      [orig_its]. Note that although [orig_crlf] is intended to specify whether
+      the original file had CRLF-encoded newlines, in reality it controls the
+      style of newlines for modified/new elements, the newlines for unmodified
+      elements will always be as in [str], regardless of [orig_crlf]. *)
 
   (** [opamfile f] converts [f] to string, respecting the layout and comments in
       the corresponding on-disk file for unmodified items. [format_from] can be

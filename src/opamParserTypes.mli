@@ -25,6 +25,7 @@ type value =
   | Bool of pos * bool
   | Int of pos * int
   | String of pos * string
+      (** Note that newlines should always be encoded [\n] and never [\r\n] *)
   | Relop of pos * relop * value * value
   | Prefix_relop of pos * relop * value
   | Logop of pos * logop * value * value
