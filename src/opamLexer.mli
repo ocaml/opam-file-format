@@ -23,5 +23,13 @@ val pfxop: string -> pfxop
 
 val env_update_op: string -> env_update_op
 
+type state
+(** Internal state of the lexer. Created by {!new_state}, the state should
+    be passed in each subsequent call to {!token}. *)
 
-val token: Lexing.lexbuf -> OpamBaseParser.token
+val new_state: unit -> state
+(** Initialises the extra state required by the lexer. *)
+
+val token: state -> Lexing.lexbuf -> OpamBaseParser.token
+(** Returns the next token from a [Lexing.lexbuf] and updates the {!state}
+    (which would have been constructed by {!new_state}. *)

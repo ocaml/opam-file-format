@@ -13,13 +13,13 @@ let parse_from_string parse_fun str filename =
   let lexbuf = Lexing.from_string str in
   lexbuf.Lexing.lex_curr_p <-
     { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
-  parse_fun OpamLexer.token lexbuf
+  parse_fun (OpamLexer.token (OpamLexer.new_state ())) lexbuf
 
 let parse_from_channel parse_fun ic filename =
   let lexbuf = Lexing.from_channel ic in
   lexbuf.Lexing.lex_curr_p <-
     { lexbuf.Lexing.lex_curr_p with Lexing.pos_fname = filename };
-  parse_fun OpamLexer.token lexbuf
+  parse_fun (OpamLexer.token (OpamLexer.new_state ())) lexbuf
 
 let parse_from_file parse_fun filename =
   let ic = open_in_bin filename in
@@ -30,7 +30,7 @@ let parse_from_file parse_fun filename =
   with e -> close_in ic; raise e
 
 (** raw parser entry points *)
-let main = OpamBaseParser.main
+let main = OpamBaseParser.main ~default_eol_style:Sys.win32
 let value = OpamBaseParser.value
 
 (** file parsers *)

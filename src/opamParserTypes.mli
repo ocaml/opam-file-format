@@ -50,5 +50,6 @@ and opamfile_item =
 (** A file is a list of items and the filename *)
 type opamfile = {
   file_contents: opamfile_item list;
+  file_crlf    : bool;
   file_name    : file_name;
 }
