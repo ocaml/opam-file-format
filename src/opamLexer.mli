@@ -9,19 +9,25 @@
 (*                                                                        *)
 (**************************************************************************)
 
-(** OPAM config file lexer *)
+(** opam format lexer *)
 
 open OpamParserTypes
 
 exception Error of string
+(** Raised on any lexing error with a description of the fault. Note that
+    [Failure "lexing: empty token"] is never raised by the lexer. *)
 
 val relop: string -> relop
+(** Inverse of {!OpamPrinter.relop} *)
 
 val logop: string -> logop
+(** Inverse of {!OpamPrinter.logop} *)
 
 val pfxop: string -> pfxop
+(** Inverse of {!OpamPrinter.pfxop} *)
 
 val env_update_op: string -> env_update_op
+(** Inverse of {!OpamPrinter.env_update_op} *)
 
 type state
 (** Internal state of the lexer. Created by {!new_state}, the state should

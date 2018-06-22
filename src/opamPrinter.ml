@@ -206,19 +206,6 @@ let rec opamfile_item_equals i1 i2 = match i1, i2 with
   | _ -> false
 
 module Normalise = struct
-  (** OPAM normalised file format, for signatures:
-      - each top-level field on a single line
-      - file ends with a newline
-      - spaces only after [fieldname:], between elements in lists, before braced
-        options, between operators and their operands
-      - fields are sorted lexicographically by field name (using [String.compare])
-      - newlines in strings turned to ['\n'], backslashes and double quotes
-        escaped
-      - no comments (they don't appear in the internal file format anyway)
-      - fields containing an empty list, or a singleton list containing an empty
-        list, are not printed at all
-  *)
-
   let escape_string s =
     let len = String.length s in
     let buf = Buffer.create (len * 2) in
