@@ -16,7 +16,32 @@ open OpamBaseParser
 
 exception Error of string
 
-let newline lexbuf = Lexing.new_line lexbuf
+type state = {mutable eol_style: [`Start|`LF|`CRLF|`Mixed]}
+
+let new_state () = {eol_style = `Start}
+
+let crlf_mode = function
+  | `Start
+  | `Mixed -> None
+  | `LF -> Some false
+  | `CRLF -> Some true
+
+(* newline must only be called in a rule matching exactly the eol regexp *)
+let newline state lexbuf =
+  let () =
+    match (Lexing.lexeme lexbuf).[0], state.eol_style with
+    | ('\r', `Start) ->
+        state.eol_style <- `CRLF
+    | ('\n', `Start) ->
+        state.eol_style <- `LF
+    | ('\r', `LF)
+    | ('\n', `CRLF) ->
+        state.eol_style <- `Mixed
+    | _ ->
+        ()
+  in
+  Lexing.new_line lexbuf
+
 let error fmt =
   Printf.kprintf (fun msg -> raise (Error msg)) fmt
 
@@ -74,9 +99,9 @@ let char_for_hexadecimal_code lexbuf i =
              else d2 - 48 in
   Char.chr (val1 * 16 + val2)
 
-let buffer_rule r lb =
+let buffer_rule r s lb =
   let b = Buffer.create 64 in
-  r b lb ;
+  r s b lb ;
   Buffer.contents b
 }
 
@@ -97,9 +122,9 @@ let envop_char = [ '+' ':' ]
 let envop = (envop_char '=' | '=' envop_char '='?)
 let int    = ('-'? ['0'-'9' '_']+)
 
-rule token = parse
-| space  { token lexbuf }
-| eol    { newline lexbuf; token lexbuf }
+rule token state = parse
+| space  { token state lexbuf }
+| eol    { newline state lexbuf; token state lexbuf }
 | ":"    { COLON }
 | "{"    { LBRACE }
 | "}"    { RBRACE }
@@ -107,11 +132,11 @@ rule token = parse
 | "]"    { RBRACKET }
 | "("    { LPAR }
 | ")"    { RPAR }
-| '\"'   { STRING (buffer_rule string lexbuf) }
-| "\"\"\"" { STRING (buffer_rule string_triple lexbuf) }
-| "(*"   { comment 1 lexbuf; token lexbuf }
-| '#' [^'\n']*
-         { token lexbuf }
+| '\"'   { STRING (buffer_rule string state lexbuf) }
+| "\"\"\"" { STRING (buffer_rule string_triple state lexbuf) }
+| "(*"   { comment state 1 lexbuf; token state lexbuf }
+| "#" [^'\r' '\n']*
+         { token state lexbuf }
 | "true" { BOOL true }
 | "false"{ BOOL false }
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
@@ -121,35 +146,35 @@ rule token = parse
 | '|'    { OR }
 | pfxop  { PFXOP (pfxop (Lexing.lexeme lexbuf)) }
 | envop  { ENVOP (env_update_op (Lexing.lexeme lexbuf)) }
-| eof    { EOF }
+| eof    { EOF (crlf_mode state.eol_style) }
 | _      { let token = Lexing.lexeme lexbuf in
            error "'%s' is not a valid token" token }
 
-and string b = parse
+and string state b = parse
 | '\"'    { () }
-| eol     { newline lexbuf ;
-            Buffer.add_char b '\n'            ; string b lexbuf }
-| '\\'    { (match escape lexbuf with
+| eol     { newline state lexbuf ;
+            Buffer.add_char b '\n'            ; string state b lexbuf }
+| '\\'    { (match escape state lexbuf with
             | Some c -> Buffer.add_char b c
             | None -> ());
-            string b lexbuf }
-| _ as c  { Buffer.add_char b c               ; string b lexbuf }
+            string state b lexbuf }
+| _ as c  { Buffer.add_char b c               ; string state b lexbuf }
 | eof     { error "unterminated string" }
 
-and string_triple b = parse
+and string_triple state b = parse
 | "\"\"\""    { () }
-| eol     { newline lexbuf ;
-            Buffer.add_char b '\n'            ; string_triple b lexbuf }
-| '\\'    { (match escape lexbuf with
+| eol     { newline state lexbuf ;
+            Buffer.add_char b '\n'            ; string_triple state b lexbuf }
+| '\\'    { (match escape state lexbuf with
             | Some c -> Buffer.add_char b c
             | None -> ());
-            string_triple b lexbuf }
-| _ as c  { Buffer.add_char b c               ; string_triple b lexbuf }
+            string_triple state b lexbuf }
+| _ as c  { Buffer.add_char b c               ; string_triple state b lexbuf }
 | eof     { error "unterminated string" }
 
-and escape = parse
+and escape state = parse
 | eol space *
-          { newline lexbuf; None }
+          { newline state lexbuf; None }
 | ['\\' '\"' ''' 'n' 'r' 't' 'b' ' '] as c
           { Some (char_for_backslash c) }
 | digit digit digit
@@ -158,9 +183,9 @@ and escape = parse
           { Some (char_for_hexadecimal_code lexbuf 1) }
 | ""      { error "illegal escape sequence" }
 
-and comment n = parse
-| "*)" { if n > 1 then comment (n-1) lexbuf }
-| "(*" { comment (n+1)lexbuf }
+and comment state n = parse
+| "*)" { if n > 1 then comment state (n-1) lexbuf }
+| "(*" { comment state (n+1)lexbuf }
 | eof  { error "unterminated comment" }
-| '\n' { newline lexbuf; comment n lexbuf }
-| _    { comment n lexbuf }
+| eol  { newline state lexbuf; comment state n lexbuf }
+| _    { comment state n lexbuf }

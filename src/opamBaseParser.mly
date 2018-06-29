@@ -25,7 +25,7 @@ let get_pos n =
 
 %token <string> STRING IDENT
 %token <bool> BOOL
-%token EOF
+%token <bool option> EOF
 %token LBRACKET RBRACKET
 %token LPAR RPAR
 %token LBRACE RBRACE
@@ -48,14 +48,19 @@ let get_pos n =
 %nonassoc URELOP
 
 %start main value
-%type <string -> OpamParserTypes.opamfile> main
+%type <?default_eol_style:bool -> string -> OpamParserTypes.opamfile> main
 %type <OpamParserTypes.value> value
 
 %%
 
 main:
-| items EOF { fun file_name ->
-        { file_contents = $1; file_name } }
+| items EOF { fun ?(default_eol_style = Sys.win32) file_name ->
+        let file_crlf =
+          match $2 with
+          | None -> default_eol_style
+          | Some style -> style
+        in
+        { file_contents = $1; file_crlf; file_name } }
 ;
 
 items:
@@ -102,9 +107,9 @@ atom:
 
 %%
 
-let main t l f =
+let main t l ?default_eol_style f =
   try
-    let r = main t l f in
+    let r = main t l ?default_eol_style f in
     Parsing.clear_parser ();
     r
   with

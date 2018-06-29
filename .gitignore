@@ -10,4 +10,7 @@
 *.cmxa
 *.cmxs
 *.a
+*.lib
 *.o
+*.obj
+src/.depend

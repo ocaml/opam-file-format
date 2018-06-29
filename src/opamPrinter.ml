@@ -53,6 +53,17 @@ let escape_string ?(triple=false) s =
   done;
   Buffer.contents buf
 
+let format_string fmt str =
+  let rec loop i =
+    match String.index_from str i '\n' with
+    | j ->
+        String.sub str i (j - i) |> Format.fprintf fmt "%s@\n";
+        loop (succ j)
+    | exception Not_found ->
+        String.sub str i (String.length str - i) |> Format.pp_print_string fmt
+  in
+  loop 0
+
 let rec format_value fmt = function
   | Relop (_,op,l,r) ->
     Format.fprintf fmt "@[<h>%a %s@ %a@]"
@@ -69,10 +80,14 @@ let rec format_value fmt = function
   | Int (_,i)       -> Format.fprintf fmt "%d" i
   | Bool (_,b)      -> Format.fprintf fmt "%b" b
   | String (_,s)    ->
-    if String.contains s '\n'
-    then Format.fprintf fmt "\"\"\"\n%s\"\"\""
-        (escape_string ~triple:true s)
-    else Format.fprintf fmt "\"%s\"" (escape_string s)
+    if String.contains s '\n' then
+      let s = escape_string ~triple:true s in
+      if s.[0] = '\n' then
+        Format.fprintf fmt "\"\"\"%a\"\"\"" format_string s
+      else
+        Format.fprintf fmt "\"\"\"\\@\n%a\"\"\"" format_string s
+    else
+      Format.fprintf fmt "\"%s\"" (escape_string s)
   | List (_, l) ->
     Format.fprintf fmt "@[<hv>[@;<0 2>@[<hv>%a@]@,]@]" format_values l
   | Group (_,g)     -> Format.fprintf fmt "@[<hv>(%a)@]" format_values g
@@ -132,11 +147,28 @@ let format_opamfile fmt f =
   format_items fmt f.file_contents;
   Format.pp_print_newline fmt ()
 
-let items l =
-  format_items Format.str_formatter l; Format.flush_str_formatter ()
+let items =
+  let buffer = Buffer.create 4096 in
+  let fmt = Format.formatter_of_buffer buffer in
+  let fns = Format.pp_get_formatter_out_functions fmt () in
+  fun crlf_eol l ->
+    let new_fns =
+      let out_newline =
+        if crlf_eol then
+          fun () -> Buffer.add_string Format.stdbuf "\r\n"
+        else
+          fns.out_newline
+      in
+      {fns with out_newline}
+    in
+    Format.pp_set_formatter_out_functions fmt new_fns;
+    let r = format_items fmt l; Format.pp_print_flush fmt (); Buffer.contents buffer in
+    Buffer.reset buffer;
+    Format.pp_set_formatter_out_functions fmt fns;
+    r
 
 let opamfile f =
-  items f.file_contents
+  items f.file_crlf f.file_contents
 
 let rec value_equals v1 v2 = match v1, v2 with
   | Bool (_, b1), Bool (_, b2) -> b1 = b2
@@ -174,19 +206,6 @@ let rec opamfile_item_equals i1 i2 = match i1, i2 with
   | _ -> false
 
 module Normalise = struct
-  (** OPAM normalised file format, for signatures:
-      - each top-level field on a single line
-      - file ends with a newline
-      - spaces only after [fieldname:], between elements in lists, before braced
-        options, between operators and their operands
-      - fields are sorted lexicographically by field name (using [String.compare])
-      - newlines in strings turned to ['\n'], backslashes and double quotes
-        escaped
-      - no comments (they don't appear in the internal file format anyway)
-      - fields containing an empty list, or a singleton list containing an empty
-        list, are not printed at all
-  *)
-
   let escape_string s =
     let len = String.length s in
     let buf = Buffer.create (len * 2) in
@@ -251,7 +270,8 @@ module Normalise = struct
 end
 
 module Preserved = struct
-  let items txt orig f =
+  let items txt orig_crlf orig f =
+    let eol = if orig_crlf then "\r\n" else "\n" in
     let pos_index =
       let lines_index =
         let rec aux acc s =
@@ -300,7 +320,7 @@ module Preserved = struct
          | Some (Variable (_, _, v1)), f when value_equals v v1 ->
            aux (get_substring pos r :: acc) f r
          | Some item, f ->
-           aux ((items [item] ^ "\n") :: acc) f r
+           aux ((items orig_crlf [item] ^ eol) :: acc) f r
          | None, f ->
            aux acc f r)
       | Section (pos, {section_kind; section_name; _}) as sec :: r ->
@@ -308,12 +328,12 @@ module Preserved = struct
          | Some s, f when opamfile_item_equals sec s ->
            aux (get_substring pos r :: acc) f r
          | Some item, f ->
-           aux ((items [item] ^ "\n") :: acc) f r
+           aux ((items orig_crlf [item] ^ eol) :: acc) f r
          | None, f -> aux acc f r)
       | [] ->
         let remaining = match f with
           | [] -> []
-          | f -> [items f ^ "\n"]
+          | f -> [items orig_crlf f ^ eol]
         in
         List.rev_append acc remaining
     in
@@ -327,12 +347,12 @@ module Preserved = struct
     in
     let txt =
       let b = Buffer.create 4096 in
-      let ic = open_in orig_file in
+      let ic = open_in_bin orig_file in
       try while true do Buffer.add_channel b ic 4096 done; assert false with
       | End_of_file -> close_in ic; Buffer.contents b
       | e -> close_in ic; raise e
     in
     let orig = OpamParser.string txt orig_file in
-    items txt orig.file_contents f.file_contents
+    items txt orig.file_crlf orig.file_contents f.file_contents
 
 end
