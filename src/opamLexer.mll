@@ -75,8 +75,11 @@ let char_for_hexadecimal_code lexbuf i =
   Char.chr (val1 * 16 + val2)
 
 let buffer_rule r lb =
+  let pos = lb.Lexing.lex_start_p in
   let b = Buffer.create 64 in
   r b lb ;
+  (* buffer start position, instead of last lexem position *)
+  lb.Lexing.lex_start_p <- pos;
   Buffer.contents b
 }
 
