@@ -10,7 +10,10 @@
 *.cmxa
 *.cmxs
 *.a
+*.lib
 *.o
 _build
 *.install
 .merlin
+*.obj
+src/.depend
