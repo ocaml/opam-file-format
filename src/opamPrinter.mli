@@ -15,26 +15,42 @@
 
 open OpamParserTypes
 
-val relop: [< relop ] -> string
-(** Converts {!OpamParserTypes.relop} to its string representation
+val relop: [< relop_kind ] with_pos -> string
+(** Converts {!OpamParserTypes.rel_op} to its string representation
     ([=], [!=], ..., [~]). *)
 
-val logop: [< logop ] -> string
-(** Converts {!OpamParserTypes.logop} to its string representation
+val logop: [< logop_kind ] with_pos -> string
+(** Converts {!OpamParserTypes.log_op} to its string representation
     ([&] and [|]). *)
 
-val pfxop: [< pfxop ] -> string
-(** Converts {!OpamParserTypes.pfxop} to its string representation
+val pfxop: [< pfxop_kind ] with_pos -> string
+(** Converts {!OpamParserTypes.pfx_op} to its string representation
+    ([!] and [?]). *)
+
+val relop_kind: [< relop_kind ] -> string
+(** Converts {!OpamParserTypes.relop_kind} to its string representation
+    ([=], [!=], ..., [~]). *)
+
+val logop_kind: [< logop_kind ] -> string
+(** Converts {!OpamParserTypes.logop_kind} to its string representation
+    ([&] and [|]). *)
+
+val pfxop_kind: [< pfxop_kind ] -> string
+(** Converts {!OpamParserTypes.pfxop_kind} to its string representation
     ([!] and [?]). *)
 
 val env_update_op: env_update_op -> string
 (** Converts {!OpamParserTypes.env_update_op} to its string representation
     ([=], [+=], ..., [=:]). *)
 
+val env_update_op_kind: env_update_op_kind -> string
+(** Converts {!OpamParserTypes.env_update_op_kind} to its string representation
+    ([=], [+=], ..., [=:]). *)
+
 val value : value -> string
 (** Converts {!value} to a string {b always using LF-encoding of newlines}. *)
 
-val value_list: value list -> string
+val value_list: value list with_pos -> string
 (** Converts a list of {!value}s to a string {b always using LF-encoding of
     newlines}. *)
 

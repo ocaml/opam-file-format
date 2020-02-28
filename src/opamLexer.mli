@@ -17,16 +17,16 @@ exception Error of string
 (** Raised on any lexing error with a description of the fault. Note that
     [Failure "lexing: empty token"] is never raised by the lexer. *)
 
-val relop: string -> relop
+val relop: string -> relop_kind
 (** Inverse of {!OpamPrinter.relop} *)
 
-val logop: string -> logop
+val logop: string -> logop_kind
 (** Inverse of {!OpamPrinter.logop} *)
 
-val pfxop: string -> pfxop
+val pfxop: string -> pfxop_kind
 (** Inverse of {!OpamPrinter.pfxop} *)
 
-val env_update_op: string -> env_update_op
+val env_update_op: string -> env_update_op_kind
 (** Inverse of {!OpamPrinter.env_update_op} *)
 
 
