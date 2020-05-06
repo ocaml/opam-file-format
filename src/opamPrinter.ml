@@ -70,7 +70,8 @@ let rec format_value fmt = function
   | Bool (_,b)      -> Format.fprintf fmt "%b" b
   | String (_,s)    ->
     if String.contains s '\n'
-    then Format.fprintf fmt "\"\"\"\n%s\"\"\""
+    then Format.fprintf fmt "\"\"\"%s%s\"\"\""
+        (if s.[0] = '\n' then "" else "\\\n")
         (escape_string ~triple:true s)
     else Format.fprintf fmt "\"%s\"" (escape_string s)
   | List (_, l) ->
