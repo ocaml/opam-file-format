@@ -1,12 +1,13 @@
-TARGETS = opam-file-format.cma opam-file-format.cmxa opam-file-format.cmxs META
+TARGETS = opam-file-format.cma opam-file-format.cmxa opam-file-format.cmxs
 
 all: $(TARGETS)
+	$(MAKE) -C src META
 
 byte: $(filter %.cma,$(TARGETS))
-	:
+	$(MAKE) -C src META
 
 native: $(filter %.cmxa,$(TARGETS))
-	:
+	$(MAKE) -C src META
 
 .PHONY: dune
 dune:

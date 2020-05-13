@@ -20,3 +20,4 @@ src/.depend
 src/opamBaseParser.ml
 src/opamBaseParser.mli
 src/opamLexer.ml
+src/META
