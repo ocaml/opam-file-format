@@ -8,8 +8,14 @@ byte: $(filter %.cma,$(TARGETS))
 native: $(filter %.cmxa,$(TARGETS))
 	:
 
+.PHONY: dune
+dune:
+	dune build --profile=dev @all
+
 %:
 	$(MAKE) -C src $@
+clean::
+	$(MAKE) -C src clean
 
 PREFIX ?= /usr/local
 LIBDIR ?= $(PREFIX)/lib
@@ -24,3 +30,6 @@ install:
 uninstall:
 	rm -f $(DESTDIR)$(LIBDIR)/opam-file-format/*
 	rmdir $(DESTDIR)$(LIBDIR)/opam-file-format
+
+clean::
+	rm -rf _build

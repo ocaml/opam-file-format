@@ -32,7 +32,7 @@ opam-file-format.cmxs: $(MODULES:%=%.cmx)
 
 .PHONY: clean
 clean:
-	rm -f *.cm* *.o *.a $(GENERATED) .depend
+	rm -f *.cm* *.o *.a $(GENERATED) .depend .merlin
 
 .depend: *.ml *.mli $(GENERATED)
 	ocamldep *.mli *.ml > .depend
