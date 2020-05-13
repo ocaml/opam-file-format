@@ -17,3 +17,6 @@ _build
 .merlin
 *.obj
 src/.depend
+src/opamBaseParser.ml
+src/opamBaseParser.mli
+src/opamLexer.ml
