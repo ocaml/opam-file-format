@@ -30,6 +30,9 @@ opam-file-format.cmxa: $(MODULES:%=%.cmx)
 opam-file-format.cmxs: $(MODULES:%=%.cmx)
 	ocamlopt -shared $^ -o $@
 
+META: META.in ../opam-file-format.opam
+	sed -e 's/VERSION/$(shell sed -ne "s/^version: //p" ../opam-file-format.opam)/' $< > $@
+
 .PHONY: clean
 clean:
 	rm -f *.cm* *.o *.a $(GENERATED) .depend .merlin

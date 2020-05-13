@@ -1,4 +1,4 @@
-TARGETS = opam-file-format.cma opam-file-format.cmxa opam-file-format.cmxs
+TARGETS = opam-file-format.cma opam-file-format.cmxa opam-file-format.cmxs META
 
 all: $(TARGETS)
 
