@@ -1,17 +1,16 @@
-opam-version: "1.2"
-name: "opam-file-format"
+opam-version: "2.0"
 version: "2.0.0"
-synopsis: "Parser and printer for the opam file syntax"
 maintainer: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
 authors: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
-license: "LGPL-2.1 with OCaml linking exception"
 homepage: "https://opam.ocaml.org"
 bug-reports: "https://github.com/ocaml/opam-file-format/issues"
+license: "LGPL-2.1-only with OCaml-LGPL-linking-exception"
+dev-repo: "git+https://github.com/ocaml/opam-file-format"
 build: [
   make
   "byte" {!ocaml-native}
   "all" {ocaml-native}
 ]
 install: [make "install" "PREFIX=%{prefix}%"]
-remove: ["rm" "-rf" "%{opam-file-format:lib}%"]
-dev-repo: "git+https://github.com/ocaml/opam-file-format"
+synopsis: "Parser and printer for the opam file syntax"
+depends: ["ocaml"]
