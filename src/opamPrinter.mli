@@ -41,9 +41,7 @@ val value_list: value list -> string
 val items: opamfile_item list -> string
 
 val opamfile: opamfile -> string
-(** Converts an {!opamfile} to a string, using the
-    {!OpamParserTypes.opamfile.file_crlf} field to determine how to encode line
-    endings. *)
+(** Converts an {!opamfile} to a string. *)
 
 val format_opamfile: Format.formatter -> opamfile -> unit
 (** Writes an {!opamfile} to a [Format.formatter]. The function ensures that all
@@ -90,8 +88,7 @@ module Preserved : sig
   val opamfile: ?format_from:file_name -> opamfile -> string
   (** [opamfile f] converts [f] to string, respecting the layout and comments in
       the corresponding on-disk file for unmodified items. [format_from] can be
-      specified instead of using the filename specified in [f]. CRLF-encoding
-      is {b always} determined from the file (i.e. [f.file_crlf] is ignored). *)
+      specified instead of using the filename specified in [f]. *)
 end
 
 (** {2 Random utility functions} *)
