@@ -19,8 +19,10 @@ type relop = [ `Eq  (** [=] *)
              | `Leq (** [<=] *)
              | `Lt  (** [<] *)
              ]
+
 (** Logical operators *)
 type logop = [ `And (** [&] *) | `Or (** [|] *) ]
+
 (** Prefix operators *)
 type pfxop = [ `Not (** [!] *) | `Defined (** [?] *) ]
 

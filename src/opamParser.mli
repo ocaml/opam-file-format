@@ -43,20 +43,25 @@ val string: string -> file_name -> opamfile
 (** Parse the content of a file already read to a string. Note that for
     CRLF-detection to work on Windows, it is necessary to read the original file
     using binary mode on Windows! *)
+
 val channel: in_channel -> file_name -> opamfile
 (** Parse the content of a file from an already-opened channel. Note that for
     CRLF-detection to work on Windows, it is necessary for the channel to be
     in binary mode! *)
+
 val file: file_name -> opamfile
 (** Parse the content of a file. The file is opened in binary mode, so
     CRLF-detection works on all platforms. *)
 
 (** {2 [value] parsers } *)
+
 val value_from_string: string -> file_name -> value
 (** Parse the first value in the given string. [file_name] is used for lexer
     positions. *)
+
 val value_from_channel: in_channel -> file_name -> value
 (** Parse the first value from the given channel. [file_name] is used for
     lexer positions. *)
+
 val value_from_file: file_name -> value
 (** Parse the first value from the given file. *)
