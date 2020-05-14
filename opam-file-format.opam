@@ -10,6 +10,7 @@ build: [
   [make "byte" {!ocaml-native} "all" {ocaml-native}] {!dune:installed}
   ["dune" "build" "-p" name "-j" jobs "@install" "@doc" {with-doc}] {dune:installed}
 ]
+depopts: "dune"
 install: [make "install" "PREFIX=%{prefix}%"] {!dune:installed}
 synopsis: "Parser and printer for the opam file syntax"
 depends: ["ocaml"]

@@ -5,8 +5,10 @@ script: bash -ex .travis-opam.sh
 env:
   global:
   - PACKAGE=opam-file-format
+  - DEPOPTS=dune
+  - DUNE_PROFILE=dev
   matrix:
-  - OCAML_VERSION=4.02
+  - OCAML_VERSION=4.02 DUNE_PROFILE=release
   - OCAML_VERSION=4.03
   - OCAML_VERSION=4.04
   - OCAML_VERSION=4.05
