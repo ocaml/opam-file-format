@@ -20,3 +20,6 @@ env:
 os:
   - linux
   - osx
+cache:
+    directories:
+    - $HOME/.opam
