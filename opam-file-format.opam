@@ -9,8 +9,12 @@ dev-repo: "git+https://github.com/ocaml/opam-file-format"
 build: [
   [make "byte" {!ocaml-native} "all" {ocaml-native}] {!dune:installed}
   ["dune" "build" "-p" name "-j" jobs "@install" "@doc" {with-doc}] {dune:installed}
+  ["dune" "runtest" "-p" name "-j" jobs] {with-test & dune:installed}
 ]
 depopts: "dune"
 install: [make "install" "PREFIX=%{prefix}%"] {!dune:installed}
 synopsis: "Parser and printer for the opam file syntax"
-depends: ["ocaml"]
+depends: [
+  "ocaml"
+  "alcotest" {with-test}
+]
