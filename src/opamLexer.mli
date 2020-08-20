@@ -18,15 +18,19 @@ exception Error of string
     [Failure "lexing: empty token"] is never raised by the lexer. *)
 
 val relop: string -> relop
+[@@ocaml.deprecated "Use OpamLexer.FullPos.relop instead."]
 (** Inverse of {!OpamPrinter.relop} *)
 
 val logop: string -> logop
+[@@ocaml.deprecated "Use OpamLexer.FullPos.logop instead."]
 (** Inverse of {!OpamPrinter.logop} *)
 
 val pfxop: string -> pfxop
+[@@ocaml.deprecated "Use OpamLexer.FullPos.pfxop instead."]
 (** Inverse of {!OpamPrinter.pfxop} *)
 
 val env_update_op: string -> env_update_op
+[@@ocaml.deprecated "Use OpamLexer.FullPos.env_update_op instead."]
 (** Inverse of {!OpamPrinter.env_update_op} *)
 
 

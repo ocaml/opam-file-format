@@ -320,7 +320,7 @@ module Preserved = struct
       | End_of_file -> close_in ic; Buffer.contents b
       | e -> close_in ic; raise e
     in
-    let orig = OpamParser.string txt orig_file in
+    let[@ocaml.warning "-3"] orig = OpamParser.string txt orig_file in
     items txt orig.file_contents f.file_contents
 
 end

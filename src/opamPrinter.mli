@@ -16,36 +16,43 @@
 open OpamParserTypes
 
 val relop: [< relop ] -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.relop instead."]
 (** Converts {!OpamParserTypes.relop} to its string representation
     ([=], [!=], ..., [~]). *)
 
 val logop: [< logop ] -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.logop instead."]
 (** Converts {!OpamParserTypes.logop} to its string representation
     ([&] and [|]). *)
 
 val pfxop: [< pfxop ] -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.pfxop instead."]
 (** Converts {!OpamParserTypes.pfxop} to its string representation
     ([!] and [?]). *)
 
 val env_update_op: env_update_op -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.env_update_op instead."]
 (** Converts {!OpamParserTypes.env_update_op} to its string representation
     ([=], [+=], ..., [=:]). *)
 
 val value : value -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.value instead."]
 (** Converts {!value} to a string {b always using LF-encoding of newlines}. *)
 
 val value_list: value list -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.value_list instead."]
 (** Converts a list of {!value}s to a string {b always using LF-encoding of
     newlines}. *)
 
 val items: opamfile_item list -> string
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.items instead."]
 
 val opamfile: opamfile -> string
-(** Converts an {!opamfile} to a string, using the
-    {!OpamParserTypes.opamfile.file_crlf} field to determine how to encode line
-    endings. *)
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.opamfile instead."]
+(** Converts an {!opamfile} to a string. *)
 
 val format_opamfile: Format.formatter -> opamfile -> unit
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.format_opamfile instead."]
 (** Writes an {!opamfile} to a [Format.formatter]. The function ensures that all
     newlines are sent using [Format]'s break instructions (and so ultimately are
     processed with the [out_newline] function of the formatter) but it is the
@@ -77,6 +84,7 @@ module Normalise : sig
   val items : opamfile_item list -> string
   val opamfile : opamfile -> string
 end
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.Normalise instead."]
 
 (** {2 Format-preserving reprinter} *)
 
@@ -92,13 +100,16 @@ module Preserved : sig
       the corresponding on-disk file for unmodified items. [format_from] can be
       specified instead of using the filename specified in [f]. *)
 end
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.Preserved instead."]
 
 (** {2 Random utility functions} *)
 
 val value_equals: value -> value -> bool
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.value_equals instead."]
 (** Compares structurally, without considering file positions *)
 
 val opamfile_item_equals: opamfile_item -> opamfile_item -> bool
+[@@ocaml.deprecated "Use OpamPrinter.FullPos.opamfile_item_equals instead."]
 (** Compares structurally, without considering file positions *)
 
 module FullPos : sig
@@ -143,4 +154,3 @@ module FullPos : sig
   val opamfile_item_equals: opamfile_item -> opamfile_item -> bool
 
 end
-
