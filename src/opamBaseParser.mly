@@ -11,7 +11,7 @@
 
 %{
 
-open OpamParserTypes
+open OpamParserTypes.FullPos
 
 (** Opam config file generic type parser *)
 
@@ -36,11 +36,11 @@ let get_pos n = get_pos_full ~s:n n
 %token LBRACE RBRACE
 %token COLON
 %token <int> INT
-%token <OpamParserTypes.relop_kind> RELOP
+%token <OpamParserTypes.FullPos.relop_kind> RELOP
 %token AND
 %token OR
-%token <OpamParserTypes.pfxop_kind> PFXOP
-%token <OpamParserTypes.env_update_op_kind> ENVOP
+%token <OpamParserTypes.FullPos.pfxop_kind> PFXOP
+%token <OpamParserTypes.FullPos.env_update_op_kind> ENVOP
 
 %left COLON
 %left ATOM
@@ -53,10 +53,10 @@ let get_pos n = get_pos_full ~s:n n
 %nonassoc URELOP
 
 %start main value
-%type <string -> OpamParserTypes.opamfile> main
-%type <OpamParserTypes.value> value
-%type <OpamParserTypes.value list> values
-%type <OpamParserTypes.opamfile_item> item
+%type <string -> OpamParserTypes.FullPos.opamfile> main
+%type <OpamParserTypes.FullPos.value> value
+%type <OpamParserTypes.FullPos.value list> values
+%type <OpamParserTypes.FullPos.opamfile_item> item
 
 %%
 

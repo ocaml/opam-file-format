@@ -65,3 +65,30 @@ val value_from_channel: in_channel -> file_name -> value
 
 val value_from_file: file_name -> value
 (** Parse the first value from the given file. *)
+
+module FullPos : sig
+
+  open OpamParserTypes.FullPos
+
+  val main:
+    (Lexing.lexbuf  -> OpamBaseParser.token) ->
+    Lexing.lexbuf -> file_name -> opamfile
+  val value:
+    (Lexing.lexbuf  -> OpamBaseParser.token) ->
+    Lexing.lexbuf -> value
+
+  val string: string -> file_name -> opamfile
+  val channel: in_channel -> file_name -> opamfile
+  val file: file_name -> opamfile
+
+  val value_from_string: string -> file_name -> value
+  val value_from_channel: in_channel -> file_name -> value
+  val value_from_file: file_name -> value
+
+  (** {3 Conversion functions, from full position to simple position (legacy)} *)
+  val to_value: value -> OpamParserTypes.value
+  val to_section: opamfile_section -> OpamParserTypes.opamfile_section
+  val to_item: opamfile_item -> OpamParserTypes.opamfile_item
+  val to_opamfile: opamfile -> OpamParserTypes.opamfile
+
+end

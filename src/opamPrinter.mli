@@ -15,49 +15,35 @@
 
 open OpamParserTypes
 
-val relop: [< relop_kind ] with_pos -> string
-(** Converts {!OpamParserTypes.rel_op} to its string representation
+val relop: [< relop ] -> string
+(** Converts {!OpamParserTypes.relop} to its string representation
     ([=], [!=], ..., [~]). *)
 
-val logop: [< logop_kind ] with_pos -> string
-(** Converts {!OpamParserTypes.log_op} to its string representation
+val logop: [< logop ] -> string
+(** Converts {!OpamParserTypes.logop} to its string representation
     ([&] and [|]). *)
 
-val pfxop: [< pfxop_kind ] with_pos -> string
-(** Converts {!OpamParserTypes.pfx_op} to its string representation
-    ([!] and [?]). *)
-
-val relop_kind: [< relop_kind ] -> string
-(** Converts {!OpamParserTypes.relop_kind} to its string representation
-    ([=], [!=], ..., [~]). *)
-
-val logop_kind: [< logop_kind ] -> string
-(** Converts {!OpamParserTypes.logop_kind} to its string representation
-    ([&] and [|]). *)
-
-val pfxop_kind: [< pfxop_kind ] -> string
-(** Converts {!OpamParserTypes.pfxop_kind} to its string representation
+val pfxop: [< pfxop ] -> string
+(** Converts {!OpamParserTypes.pfxop} to its string representation
     ([!] and [?]). *)
 
 val env_update_op: env_update_op -> string
 (** Converts {!OpamParserTypes.env_update_op} to its string representation
     ([=], [+=], ..., [=:]). *)
 
-val env_update_op_kind: env_update_op_kind -> string
-(** Converts {!OpamParserTypes.env_update_op_kind} to its string representation
-    ([=], [+=], ..., [=:]). *)
-
 val value : value -> string
 (** Converts {!value} to a string {b always using LF-encoding of newlines}. *)
 
-val value_list: value list with_pos -> string
+val value_list: value list -> string
 (** Converts a list of {!value}s to a string {b always using LF-encoding of
     newlines}. *)
 
 val items: opamfile_item list -> string
 
 val opamfile: opamfile -> string
-(** Converts an {!opamfile} to a string. *)
+(** Converts an {!opamfile} to a string, using the
+    {!OpamParserTypes.opamfile.file_crlf} field to determine how to encode line
+    endings. *)
 
 val format_opamfile: Format.formatter -> opamfile -> unit
 (** Writes an {!opamfile} to a [Format.formatter]. The function ensures that all
@@ -114,3 +100,47 @@ val value_equals: value -> value -> bool
 
 val opamfile_item_equals: opamfile_item -> opamfile_item -> bool
 (** Compares structurally, without considering file positions *)
+
+module FullPos : sig
+
+  (** [OpamPrinter] functions, with full position types *)
+
+  open OpamParserTypes.FullPos
+
+  val relop: [< relop_kind ] with_pos -> string
+  val logop: [< logop_kind ] with_pos -> string
+  val pfxop: [< pfxop_kind ] with_pos -> string
+  val env_update_op: env_update_op -> string
+
+  val relop_kind: [< relop_kind ] -> string
+  val logop_kind: [< logop_kind ] -> string
+  val pfxop_kind: [< pfxop_kind ] -> string
+  val env_update_op_kind: env_update_op_kind -> string
+
+  val value : value -> string
+  val value_list: value list with_pos -> string
+  val items: opamfile_item list -> string
+  val opamfile: opamfile -> string
+
+  val format_opamfile: Format.formatter -> opamfile -> unit
+
+  module Normalise : sig
+    val escape_string : string -> string
+    val value : value -> string
+    val item : opamfile_item -> string
+    val item_order : opamfile_item -> opamfile_item -> int
+    val items : opamfile_item list -> string
+    val opamfile : opamfile -> string
+  end
+
+  module Preserved : sig
+    val items: string -> opamfile_item list -> opamfile_item list -> string
+
+    val opamfile: ?format_from:file_name -> opamfile -> string
+  end
+
+  val value_equals: value -> value -> bool
+  val opamfile_item_equals: opamfile_item -> opamfile_item -> bool
+
+end
+
