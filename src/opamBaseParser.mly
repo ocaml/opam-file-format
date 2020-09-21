@@ -13,7 +13,7 @@
 
 open OpamParserTypes
 
-(** OPAM config file generic type parser *)
+(** Opam config file generic type parser *)
 
 let get_pos n =
   let pos = Parsing.rhs_start_pos n in

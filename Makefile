@@ -9,14 +9,15 @@ byte: $(filter %.cma,$(TARGETS))
 native: $(filter %.cmxa,$(TARGETS))
 	$(MAKE) -C src META
 
-.PHONY: dune
+.PHONY: dune clean
 dune:
 	dune build --profile=dev @all
 
 %:
 	$(MAKE) -C src $@
-clean::
-	$(MAKE) -C src clean
+
+tests: opam-file-format.cmxa
+	$(MAKE) -C tests run
 
 PREFIX ?= /usr/local
 LIBDIR ?= $(PREFIX)/lib
@@ -34,3 +35,5 @@ uninstall:
 
 clean::
 	rm -rf _build
+	$(MAKE) -C src $@
+	$(MAKE) -C tests $@
