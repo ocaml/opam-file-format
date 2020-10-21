@@ -10,6 +10,8 @@
 (**************************************************************************)
 
 (** Defines the types for the opam format lexer and parser *)
+
+(** Type definitions used by the legacy and the new full position modules *)
 module Common: sig
 
   (** Relational operators *)
@@ -41,19 +43,25 @@ module Common: sig
                      | EqPlusEq (** [=+=] *)
 end
 
+(** [OpamParserTypes] transitional module with full position types *)
 module FullPos : sig
 
   (** Source file positions *)
   type file_name = Common.file_name
-  type pos =
-    { filename: file_name;
-      start: int * int; (* line, column *)
-      stop: int * int; (* line, column *)
-    }
-  type 'a with_pos =
-    { pelem : 'a;
-      pos : pos
-    }
+
+  (** Full position *)
+  type pos = {
+    filename: file_name;
+    start: int * int; (* line, column *)
+    stop: int * int;  (* line, column *)
+  }
+
+  (** [with_pos] type, used for all units, embedding the element [pelem] ans
+      its position [pos] *)
+  type 'a with_pos = {
+    pelem : 'a;
+    pos : pos
+  }
 
   type relop_kind = Common.relop
   and rel_op = relop_kind with_pos
@@ -70,80 +78,81 @@ module FullPos : sig
   (** Base values *)
   type value_kind =
     | Bool of bool
+    (** [bool] atoms *)
     | Int of int
+    (** [int] atoms *)
     | String of string
+    (** [string] atoms *)
     | Relop of rel_op * value * value
+    (** Relational operators with two values (e.g. [os != "win32"]) *)
     | Prefix_relop of rel_op * value
+    (** Relational operators in prefix position (e.g. [< "4.07.0"]) *)
     | Logop of log_op * value * value
+    (** Logical operators *)
     | Pfxop of pfx_op * value
+    (** Prefix operators *)
     | Ident of string
+    (** Identifiers *)
     | List of value list with_pos
+    (** Lists of values ([[x1 x2 ... x3]]) *)
     | Group of value list with_pos
+    (** Groups of values ([(x1 x2 ... x3)]) *)
     | Option of value * value list with_pos
+    (** Value with optional list ([x1 {x2 x3 x4}]) *)
     | Env_binding of value * env_update_op * value
+    (** Environment variable binding ([FOO += "bar"]) *)
   and value = value_kind with_pos
 
+  (** An opamfile section *)
   type opamfile_section =
-    { section_kind  : string with_pos;
-      section_name  : string with_pos option;
-      section_items : opamfile_item list with_pos;
+    { section_kind  : string with_pos;             (** Section kind
+                                                       (e.g. [extra-source]) *)
+      section_name  : string with_pos option;      (** Section name
+                                                       (e.g. ["myfork.patch"]) *)
+      section_items : opamfile_item list with_pos; (** Content of the section *)
     }
+
+  (** An opamfile is composed of sections and variable definitions *)
   and opamfile_item_kind =
-    | Section of opamfile_section
-    | Variable of string with_pos * value
+    | Section of opamfile_section         (** e.g. [kind ["name"] { ... }] *)
+    | Variable of string with_pos * value (** e.g. [opam-version: "2.0"] *)
   and opamfile_item = opamfile_item_kind with_pos
 
+  (** A file is a list of items and the filename *)
   type opamfile = {
-    file_contents: opamfile_item list;
-    file_name    : file_name;
+    file_contents: opamfile_item list; (** Content of the file *)
+    file_name    : file_name;          (** Name of the disk file this record was
+                                           loaded from *)
   }
 
 end
 
 include module type of struct include Common end
 
-(** Base values *)
 type value =
   | Bool of pos * bool
-  (** [bool] atoms *)
   | Int of pos * int
-  (** [int] atoms *)
   | String of pos * string
-  (** [string] atoms *)
   | Relop of pos * relop * value * value
-  (** Relational operators with two values (e.g. [os != "win32"]) *)
   | Prefix_relop of pos * relop * value
-  (** Relational operators in prefix position (e.g. [< "4.07.0"]) *)
   | Logop of pos * logop * value * value
-  (** Logical operators *)
   | Pfxop of pos * pfxop * value
-  (** Prefix operators *)
   | Ident of pos * string
-  (** Identifiers *)
   | List of pos * value list
-  (** Lists of values ([[x1 x2 ... x3]]) *)
   | Group of pos * value list
-  (** Groups of values ([(x1 x2 ... x3)]) *)
   | Option of pos * value * value list
-  (** Value with optional list ([x1 {x2 x3 x4}]) *)
   | Env_binding of pos * value * env_update_op * value
-  (** Environment variable binding ([FOO += "bar"]) *)
 
-(** An opamfile section *)
 type opamfile_section = {
-  section_kind  : string;            (** Section kind (e.g. [extra-source]) *)
-  section_name  : string option;     (** Section name (e.g. ["myfork.patch"]) *)
-  section_items : opamfile_item list (** Content of the section *);
+  section_kind  : string;
+  section_name  : string option;
+  section_items : opamfile_item list
 }
-
-(** An opamfile is composed of sections and variable definitions *)
 and opamfile_item =
-  | Section of pos * opamfile_section (** e.g. [kind ["name"] { ... }] *)
-  | Variable of pos * string * value  (** e.g. [opam-version: "2.0"] *)
+  | Section of pos * opamfile_section
+  | Variable of pos * string * value
 
-(** A file is a list of items and the filename *)
 type opamfile = {
-  file_contents: opamfile_item list; (** Content of the file *)
-  file_name    : file_name;          (** Name of the disk file this record was
-                                         loaded from *)
+  file_contents: opamfile_item list;
+  file_name    : file_name;
 }
