@@ -45,7 +45,7 @@ type env_update_op = Eq       (** [=] *)
 module FullPos : sig
 
   (** Source file positions *)
-  type nonrec file_name = file_name
+  type file_name = string
 
   (** Full position *)
   type pos = {
