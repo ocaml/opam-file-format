@@ -36,16 +36,16 @@ module FullPos : sig
       ([=], [+=], ..., [=:]). *)
 
 
-  val relop: rel_op -> string
-  (** Converts {!OpamParserTypes.FullPos.rel_op} to its string representation
+  val relop: relop -> string
+  (** Converts {!OpamParserTypes.FullPos.relop} to its string representation
       ([=], [!=], ..., [~]). *)
 
-  val logop: log_op -> string
-  (** Converts {!OpamParserTypes.FullPos.log_op} to its string representation
+  val logop: logop -> string
+  (** Converts {!OpamParserTypes.FullPos.logop} to its string representation
       ([&] and [|]). *)
 
-  val pfxop: pfx_op -> string
-  (** Converts {!OpamParserTypes.FullPos.pfx_op} to its string representation
+  val pfxop: pfxop -> string
+  (** Converts {!OpamParserTypes.FullPos.pfxop} to its string representation
       ([!] and [?]). *)
 
   val env_update_op: env_update_op -> string

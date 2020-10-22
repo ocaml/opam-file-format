@@ -12,42 +12,40 @@
 (** Defines the types for the opam format lexer and parser *)
 
 (** Type definitions used by the legacy and the new full position modules *)
-module Common: sig
 
-  (** Relational operators *)
-  type relop = [ `Eq  (** [=] *)
-               | `Neq (** [!=] *)
-               | `Geq (** [>=] *)
-               | `Gt  (** [>] *)
-               | `Leq (** [<=] *)
-               | `Lt  (** [<] *)
-               ]
+(** Relational operators *)
+type relop = [ `Eq  (** [=] *)
+             | `Neq (** [!=] *)
+             | `Geq (** [>=] *)
+             | `Gt  (** [>] *)
+             | `Leq (** [<=] *)
+             | `Lt  (** [<] *)
+             ]
 
-  (** Logical operators *)
-  type logop = [ `And (** [&] *) | `Or (** [|] *) ]
+(** Logical operators *)
+type logop = [ `And (** [&] *) | `Or (** [|] *) ]
 
-  (** Prefix operators *)
-  type pfxop = [ `Not (** [!] *) | `Defined (** [?] *) ]
+(** Prefix operators *)
+type pfxop = [ `Not (** [!] *) | `Defined (** [?] *) ]
 
-  type file_name = string
+type file_name = string
 
-  (** Source file positions: [(filename, line, column)] *)
-  type pos = file_name * int * int
+(** Source file positions: [(filename, line, column)] *)
+type pos = file_name * int * int
 
-  (** Environment variable update operators *)
-  type env_update_op = Eq       (** [=] *)
-                     | PlusEq   (** [+=] *)
-                     | EqPlus   (** [=+] *)
-                     | ColonEq  (** [:=] *)
-                     | EqColon  (** [=:] *)
-                     | EqPlusEq (** [=+=] *)
-end
+(** Environment variable update operators *)
+type env_update_op = Eq       (** [=] *)
+                   | PlusEq   (** [+=] *)
+                   | EqPlus   (** [=+] *)
+                   | ColonEq  (** [:=] *)
+                   | EqColon  (** [=:] *)
+                   | EqPlusEq (** [=+=] *)
 
 (** [OpamParserTypes] transitional module with full position types *)
 module FullPos : sig
 
   (** Source file positions *)
-  type file_name = Common.file_name
+  type nonrec file_name = file_name
 
   (** Full position *)
   type pos = {
@@ -63,17 +61,17 @@ module FullPos : sig
     pos : pos
   }
 
-  type relop_kind = Common.relop
-  and rel_op = relop_kind with_pos
+  type relop_kind = relop
+  type relop = relop_kind with_pos
 
-  type logop_kind = Common.logop
-  and log_op = logop_kind with_pos
+  type logop_kind = logop
+  type logop = logop_kind with_pos
 
-  type pfxop_kind = Common.pfxop
-  and pfx_op = pfxop_kind with_pos
+  type pfxop_kind = pfxop
+  type pfxop = pfxop_kind with_pos
 
-  type env_update_op_kind = Common.env_update_op
-  and env_update_op = env_update_op_kind with_pos
+  type env_update_op_kind = env_update_op
+  type env_update_op = env_update_op_kind with_pos
 
   (** Base values *)
   type value_kind =
@@ -83,13 +81,13 @@ module FullPos : sig
     (** [int] atoms *)
     | String of string
     (** [string] atoms *)
-    | Relop of rel_op * value * value
+    | Relop of relop * value * value
     (** Relational operators with two values (e.g. [os != "win32"]) *)
-    | Prefix_relop of rel_op * value
+    | Prefix_relop of relop * value
     (** Relational operators in prefix position (e.g. [< "4.07.0"]) *)
-    | Logop of log_op * value * value
+    | Logop of logop * value * value
     (** Logical operators *)
-    | Pfxop of pfx_op * value
+    | Pfxop of pfxop * value
     (** Prefix operators *)
     | Ident of string
     (** Identifiers *)
@@ -126,8 +124,6 @@ module FullPos : sig
   }
 
 end
-
-include module type of struct include Common end
 
 type value =
   | Bool of pos * bool
