@@ -83,7 +83,7 @@ let char_for_hexadecimal_code lexbuf i =
 
 (* Some hash-consing for strings *)
 module HS =
-  Weak.Make(struct include String let hash = Hashtbl.hash end)
+  Weak.Make(struct include String let hash = Hashtbl.hash let equal = (=) end)
 let hm = HS.create 317
 
 
