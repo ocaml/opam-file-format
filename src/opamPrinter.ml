@@ -564,20 +564,22 @@ module FullPos = struct
   end
 
   module Preserved = struct
+
+    let lines_index =
+      let rec aux acc s =
+        let until =
+          try Some (String.index_from s (List.hd acc) '\n')
+          with Not_found -> None
+        in
+        match until with
+        | Some until -> aux (until+1 :: acc) s
+        | None -> Array.of_list (List.rev acc)
+      in
+      aux [0]
+
     let items txt orig f =
       let pos_index =
-        let lines_index =
-          let rec aux acc s =
-            let until =
-              try Some (String.index_from s (List.hd acc) '\n')
-              with Not_found -> None
-            in
-            match until with
-            | Some until -> aux (until+1 :: acc) s
-            | None -> Array.of_list (List.rev acc)
-          in
-          aux [0] txt
-        in
+        let lines_index = lines_index txt in
         fun p ->
           let sli, scol = p.start in
           let eli, ecol = p.stop in
@@ -644,20 +646,176 @@ module FullPos = struct
       in
       String.concat "\n" (aux header f orig)
 
+    let get_raw_content file =
+      let b = Buffer.create 4096 in
+      let ic = open_in file in
+      try while true do Buffer.add_channel b ic 4096 done; assert false with
+      | End_of_file -> close_in ic; Buffer.contents b
+      | e -> close_in ic; raise e
+
     let opamfile ?format_from f =
       let orig_file = match format_from with
         | Some name -> name
         | None -> f.file_name
       in
-      let txt =
-        let b = Buffer.create 4096 in
-        let ic = open_in orig_file in
-        try while true do Buffer.add_channel b ic 4096 done; assert false with
-        | End_of_file -> close_in ic; Buffer.contents b
-        | e -> close_in ic; raise e
-      in
+      let txt = get_raw_content orig_file in
       let orig = OpamParser.FullPos.string txt orig_file in
       items txt orig.file_contents f.file_contents
 
+    let without_comments ?(filename="<>") txt =
+      let lines_index = lines_index txt in
+      let pos_index (li,col) = lines_index.(li - 1) + col in
+      let extract start stop =
+        let length = stop - start in
+        if length < 1 then "" else
+          String.sub txt start length
+      in
+      let extract_p start stop =
+        let start = pos_index start in
+        let stop = pos_index stop in
+        extract start stop
+      in
+      let before acc lastpos elem =
+        (extract_p lastpos elem.pos.start
+         |> String.map (function
+             (* All opam file tokens *)
+             | '\n' | '\r' | ':' | '[' | ']' | '{' | '}' as tk -> tk
+             | _ -> ' '
+           )) :: acc,
+        elem.pos.start
+      in
+      let element acc elem =
+        extract_p elem.pos.start elem.pos.stop :: acc,
+        elem.pos.stop
+      in
+      let bef_w_elem acc lastpos elem =
+        let acc, _ = before acc lastpos elem in
+        let acc, lastpos = element acc elem in
+        acc ,lastpos
+      in
+      let rec nc_value (acc, lastpos) value =
+        let acc, lastpos = before acc lastpos value in
+        let acc, lastpos =
+          match value.pelem with
+          | Ident _ | Int _ | Bool _ | String _ ->
+            element acc value
+          | Relop (op,l,r) ->
+            let acc, lastpos = bef_w_elem acc lastpos l in
+            let acc, lastpos = bef_w_elem acc lastpos op in
+            let acc, lastpos = bef_w_elem acc lastpos r in
+            acc, lastpos
+          | Logop (op,l,r) ->
+            let acc, lastpos = bef_w_elem acc lastpos l in
+            let acc, lastpos = bef_w_elem acc lastpos op in
+            let acc, lastpos = bef_w_elem acc lastpos r in
+            acc, lastpos
+          | Pfxop (op,r) ->
+            let acc, lastpos = bef_w_elem acc lastpos op in
+            let acc, lastpos = bef_w_elem acc lastpos r in
+            acc, lastpos
+          | Prefix_relop (op,r) ->
+            let acc, lastpos = bef_w_elem acc lastpos op in
+            let acc, lastpos = bef_w_elem acc lastpos r in
+            acc, lastpos
+          | List l | Group l ->
+            let acc, lastpos = before acc lastpos l in
+            List.fold_left nc_value (acc, lastpos) l.pelem
+          | Option (v,l) ->
+            let acc, lastpos = bef_w_elem acc lastpos v in
+            let acc, lastpos = before acc lastpos l in
+            List.fold_left nc_value (acc, lastpos) l.pelem
+          | Env_binding (id,op,v) ->
+            let acc, lastpos = bef_w_elem acc lastpos id in
+            let acc, lastpos = bef_w_elem acc lastpos op in
+            let acc, lastpos = bef_w_elem acc lastpos v in
+            acc, lastpos
+        in
+        acc, lastpos
+      in
+      let rec nc_item (acc, lastpos) item =
+        let acc, _ = before acc lastpos item in
+        match item.pelem with
+        | Variable (name, value) ->
+          let acc, lastpos = element acc name in
+          nc_value (acc, lastpos) value
+        | Section {section_kind; section_name; section_items} ->
+          let acc, lastpos = element acc section_kind in
+          let acc, lastpos =
+            match section_name with
+            | None -> acc, lastpos
+            | Some name ->
+              let acc, lastpos =
+                bef_w_elem acc lastpos name
+              in
+              acc, lastpos
+          in
+          let acc, lastpos = before acc lastpos section_items in
+          List.fold_left nc_item (acc, lastpos) section_items.pelem
+      in
+      let opamfile = OpamParser.FullPos.string txt filename in
+      let elements, lastpos =
+        List.fold_left nc_item ([], (1,1)) opamfile.file_contents
+      in
+      let str = String.concat "" (List.rev elements) in
+      let str =
+        let final = extract (pos_index lastpos) (String.length txt -1) in
+        str ^ final
+      in
+      let trim_end_whitespaces str =
+        let _rev_split seps str =
+          let length = String.length str in
+          let rec aux index beg acc =
+            if index = length -1 then acc else
+            if List.exists (fun sep -> str.[index] = sep) seps then
+              aux (index + 1)
+                (index +1)
+                (String.sub str index 1
+                 :: String.sub str beg (index  - beg)
+                 :: acc)
+            else
+              aux (index +1) beg acc
+          in
+          aux 0 0 []
+        in
+        let split_on_chars seps s =
+          let r = ref [] in
+          let j = ref (String.length s) in
+          for i = String.length s - 1 downto 0 do
+            if List.exists (fun sep -> String.get s i = sep) seps then begin
+              r := String.sub s (i + 1) (!j - i - 1) :: !r;
+              j := i
+            end
+          done;
+          String.sub s 0 !j :: !r
+        in
+        let empty_end str =
+          let length = String.length str in
+          if length = 0 then str else
+          let rec aux current =
+            if current = -1 then current else
+            if str.[current] = ' ' then aux (current -1)
+            else current
+          in
+          let index = aux (length -1) in
+          if index = -1 then "" else
+          if index = length -1 then str else
+            String.sub str 0 (index + 1)
+        in
+        str
+        |> split_on_chars [ '\n'; '\r' ]
+        |> List.map empty_end
+        |> List.filter (fun x -> x != "")
+        |> String.concat "\n"
+      in
+      trim_end_whitespaces str
+
+    let write_without_comments ~from ~tout =
+      let txt = get_raw_content from in
+      let str = without_comments ~filename:from txt in
+      let oc = open_out_bin tout in
+      output_string oc str;
+      close_out oc
+
   end
+
 end

@@ -112,6 +112,16 @@ module FullPos : sig
     (** [opamfile f] converts [f] to string, respecting the layout and comments in
         the corresponding on-disk file for unmodified items. [format_from] can be
         specified instead of using the filename specified in [f]. *)
+
+    val without_comments: ?filename:file_name -> string -> string
+    (** [without_comments ?filename content] removes all comment and trailing
+        newlines from the raw [content] of [filename]. [filename] is given as a
+        helper for opamfile parsing (errors). *)
+
+    val write_without_comments: from:file_name -> tout:file_name -> unit
+    (** [write_without_comments ~from ~tout] applies [without_comments] to [from]
+        file content and write it in [tout] file. *)
+
   end
 
   (** {2 Random utility functions} *)
