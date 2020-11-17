@@ -93,7 +93,7 @@ item:
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
                 section_name = Some { pos = get_pos 2; pelem = $2 };
                 section_items =
-                  { pos = get_pos_full ~s:2 4; pelem = $4 };
+                  { pos = get_pos_full ~s:3 5; pelem = $4 };
                })
   }
 }
