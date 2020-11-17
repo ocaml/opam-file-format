@@ -16,3 +16,6 @@
 
 (ocamlyacc opamBaseParser)
 (ocamllex opamLexer)
+
+(env (dev
+ (flags (:standard -warn-error -A))))
