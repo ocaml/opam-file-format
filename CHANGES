@@ -1,5 +1,6 @@
 2.1.2 [???]
 * Fix named section position [#31 @rjbou]
+* Add `OpamPrinter.FullPos.Preserved` functions to remove comments from an opamfile [#32 @rjbou]
 
 2.1.1 [17 Nov 2020]
 * New types with more complete positions [#24 @rjbou]
