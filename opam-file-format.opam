@@ -14,8 +14,8 @@ depends: [
 depopts: "dune" { > "2.0.0" }
 build: [
   [ make
-    "byte" {!ocaml-native}
-    "all" {ocaml-native} ]
+    "byte" {!ocaml:native}
+    "all" {ocaml:native} ]
       {!dune:installed | dune:version <= "2.0.0"}
   [ "dune" "build" "-p" name "-j" jobs "@install"
     "@doc" {with-doc} ]
