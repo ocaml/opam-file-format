@@ -3,6 +3,7 @@
   (public_name opam-file-format)
   (synopsis "Parser and printer for the opam file syntax")
   (wrapped false)
+  (modules :standard \ flags)
   (flags :standard (:include flags.sexp))
   (modules_without_implementation opamParserTypes))
 
