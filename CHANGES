@@ -1,4 +1,5 @@
 2.1.2 [???]
+* Some hash-consing for strings [#27 @AltGr]
 * Fix named section position [#31 @rjbou]
 
 2.1.1 [17 Nov 2020]
