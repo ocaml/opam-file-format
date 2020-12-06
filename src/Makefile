@@ -21,13 +21,13 @@ show:
 	ocamlyacc $<
 
 %.cmi: %.mli
-	ocamlc -c $(PP) $<
+	ocamlc -opaque -no-alias-deps -c $(PP) $<
 
 %.cmo: %.ml %.cmi
-	ocamlc -c $(PP) $<
+	ocamlc -opaque -no-alias-deps -c $(PP) $<
 
 %.cmx: %.ml %.cmi
-	ocamlopt -c $(PP) $<
+	ocamlopt -opaque -no-alias-deps -c $(PP) $<
 
 MODULES = $(sort $(basename $(wildcard *.ml *.mll *.mly)))
 
