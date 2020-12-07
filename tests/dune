@@ -3,3 +3,5 @@
   (deps sample.opam)
   (package opam-file-format)
   (libraries alcotest opam-file-format))
+
+(rule (copy sample-opam sample.opam))
