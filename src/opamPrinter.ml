@@ -804,7 +804,7 @@ module FullPos = struct
         str
         |> split_on_chars [ '\n'; '\r' ]
         |> List.map empty_end
-        |> List.filter (fun x -> x != "")
+        |> List.filter ((<>) "")
         |> String.concat "\n"
       in
       trim_end_whitespaces str
