@@ -17,6 +17,8 @@ endif
 show:
 	echo $(OCAML_VERSION)
 
+opamParserTypes.cmi: opamParserTypes.cmo
+
 %.ml %.mli: %.mly
 	ocamlyacc $<
 
