@@ -3,6 +3,7 @@
 * Fix named section position [#31 @rjbou]
 * Don't include build system Flags module in installation [#34 @dra27]
 * Allow compilation with Dune 1.x [#35 @kit-ty-kate]
+* Fix compilation of OpamParserTypes [#36 @dra27]
 
 2.1.1 [17 Nov 2020]
 * New types with more complete positions [#24 @rjbou]
