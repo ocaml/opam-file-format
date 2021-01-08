@@ -1,4 +1,4 @@
-2.1.2 [???]
+2.1.2 [07 Jan 2021]
 * Some hash-consing for strings [#27 @AltGr]
 * Fix named section position [#31 @rjbou]
 * Don't include build system Flags module in installation [#34 @dra27]
