@@ -127,15 +127,56 @@ atom:
 
 %%
 
-let main t l f =
+let nopatch v =
+  let s =
   try
-    let r = main t l f in
-    Parsing.clear_parser ();
-    r
-  with
-  | e ->
-    Parsing.clear_parser ();
-    raise e
+    let i = String.index v '.' in
+    let i = String.index_from v (i+1) '.' in
+    (String.sub v 0 i)
+  with Not_found ->
+    let rec f i =
+      if i >= String.length v then v
+      else match String.get v i with
+        | '0'..'9' | '.' -> f (i+1)
+        | _ -> String.sub v 0 i
+    in
+    f 0
+  in
+    try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
+    with Scanf.Scan_failure _ -> (0, 0)
+
+let main t l f =
+  let r =
+    try
+      let r = main t l f in
+      Parsing.clear_parser ();
+      r
+    with
+    | e ->
+      Parsing.clear_parser ();
+      raise e in
+  match r with
+  | {file_contents = {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items; _}
+    when nopatch ver >= (2, 1) ->
+      let opam_version_variable = function
+      | {pelem = Variable({pelem = "opam-version"; _}, _); _} -> true
+      | _ -> false
+      in
+        (* For opam-version: 2.1 and later, there must be no other opam-version
+           fields. *)
+        if List.exists opam_version_variable items then
+          raise Parsing.Parse_error;
+        r
+  | {file_contents = items; _} ->
+      let opam_version_greater_2_0 = function
+      | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _} ->
+          nopatch ver > (2, 0)
+      | _ -> false
+      in
+        (* opam-version: 2.1 or later must be the first item. *)
+        if List.exists opam_version_greater_2_0 items then
+          raise Parsing.Parse_error;
+        r
 
 let value t l =
   try
