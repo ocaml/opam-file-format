@@ -170,19 +170,30 @@ exception Nothing
 let main t l file_name =
   (* Always return a result from parsing/lexing, but note if an exception
      occurred. *)
-  let parsing_exception = ref Nothing in
+  let parsing_exception = ref Lexing.(Nothing, dummy_pos, dummy_pos) in
+  let raise_if_parsing_failed = function
+  | false -> ()
+  | true ->
+      match parsing_exception with
+      | {contents = (Nothing, _, _)} -> ()
+      | {contents = (e, start, curr)} ->
+          let open Lexing in
+          l.lex_start_p <- start;
+          l.lex_curr_p <- curr;
+          raise e
+  in
   let t l =
     try t l
     with
     | Sys.Break
     | Assert_failure _
     | Match_failure _ as e -> raise e
-    | e -> parsing_exception := e; EOF
+    | e -> parsing_exception := Lexing.(e, l.lex_start_p, l.lex_curr_p); EOF
   in
     let r =
       try with_clear_parser (main t l) file_name
       with Parsing.Parse_error as e ->
-        parsing_exception := e;
+        parsing_exception := Lexing.(e, l.lex_start_p, l.lex_curr_p);
         (* Record the tokens captured so far *)
         let r = {file_contents = List.rev !parsed_so_far; file_name} in
         parsed_so_far := [];
@@ -202,8 +213,7 @@ let main t l file_name =
           (* Parsing and lexing errors from future versions of opam are ignored:
              the intent is that the tool will abort/ignore because of the
              opam-version field rather than through lexer/parser errors. *)
-          if !parsing_exception != Nothing && nopatch ver <= version then
-            raise !parsing_exception;
+          raise_if_parsing_failed (nopatch ver <= version);
           r
     | {file_contents = items; _} ->
         let opam_version_greater_2_0 = function
@@ -216,8 +226,7 @@ let main t l file_name =
             raise Parsing.Parse_error;
           (* If no opam-version field was given, all exceptions must be
              raised. *)
-          if !parsing_exception != Nothing then
-            raise !parsing_exception;
+          raise_if_parsing_failed true;
           r
 
 let value t l =
