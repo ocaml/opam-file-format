@@ -167,6 +167,12 @@ let with_clear_parser f x =
 
 exception Nothing
 
+let reset_lexbuf l file_name (start_line, start_col) (end_line, end_col) =
+  let open Lexing in
+  l.lex_start_p <- {pos_fname = file_name; pos_lnum = start_line; pos_bol = 0; pos_cnum = start_col};
+  l.lex_curr_p <- {pos_fname = file_name; pos_lnum = end_line; pos_bol = 0; pos_cnum = end_col};
+  true
+
 let main t l file_name =
   (* Always return a result from parsing/lexing, but note if an exception
      occurred. *)
@@ -203,7 +209,8 @@ let main t l file_name =
     | {file_contents = {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items; _}
       when nopatch ver >= (2, 1) ->
         let opam_version_variable = function
-        | {pelem = Variable({pelem = "opam-version"; _}, _); _} -> true
+        | {pelem = Variable({pelem = "opam-version"; _}, _); pos = {start; stop; _}} ->
+            reset_lexbuf l file_name start stop
         | _ -> false
         in
           (* For opam-version: 2.1 and later, there must be no other opam-version
@@ -217,8 +224,9 @@ let main t l file_name =
           r
     | {file_contents = items; _} ->
         let opam_version_greater_2_0 = function
-        | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _} ->
-            nopatch ver > (2, 0)
+        | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); pos = {start; stop; _}}
+          when nopatch ver > (2, 0) ->
+            reset_lexbuf l file_name start stop
         | _ -> false
         in
           (* opam-version: 2.1 or later must be the first item. *)
