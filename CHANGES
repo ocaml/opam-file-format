@@ -1,6 +1,9 @@
 2.1.3 [???]
 * Fix module link order (broken by #37) [#41 @dra27]
-* opam-version: "2.1" must appear at most once and as the first non-comment item [#43 @dra27]
+* opam-version: "2.1" must appear at most once and as the first non-comment
+  item. If opam-version is at the start and is greater than the library version,
+  `OpamLexer.Error` and `Parsing.Parse_error` are no longer raised; instead the
+  items parsed so far are returned. [#43 @dra27]
 
 2.1.2 [07 Jan 2021]
 * Some hash-consing for strings [#27 @AltGr]

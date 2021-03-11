@@ -26,6 +26,14 @@ let get_pos_full ?(s=1) n =
 
 let get_pos n = get_pos_full ~s:n n
 
+let parsed_so_far = ref []
+
+let record_token t =
+  parsed_so_far := t :: !parsed_so_far; t
+
+(* This must match up with the package's version; checked by the build system *)
+let version = (2, 1)
+
 %}
 
 %token <string> STRING IDENT
@@ -61,7 +69,7 @@ let get_pos n = get_pos_full ~s:n n
 %%
 
 main:
-| items EOF { fun file_name ->
+| items EOF { parsed_so_far := []; fun file_name ->
         { file_contents = $1; file_name } }
 ;
 
@@ -72,12 +80,14 @@ items:
 
 item:
 | IDENT COLON value                {
+  record_token
   { pos = get_pos_full 3;
     pelem =
       Variable ({ pos = get_pos 1; pelem =  $1 }, $3);
   }
 }
 | IDENT LBRACE items RBRACE {
+  record_token
   { pos = get_pos_full 4;
     pelem =
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
@@ -88,6 +98,7 @@ item:
   }
 }
 | IDENT STRING LBRACE items RBRACE {
+  record_token
   { pos = get_pos_full 4;
     pelem =
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
@@ -145,38 +156,69 @@ let nopatch v =
     try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
     with Scanf.Scan_failure _ -> (0, 0)
 
-let main t l f =
-  let r =
-    try
-      let r = main t l f in
-      Parsing.clear_parser ();
-      r
+let with_clear_parser f x =
+  try
+    let r = f x in
+    Parsing.clear_parser ();
+    r
+  with e ->
+    Parsing.clear_parser ();
+    raise e
+
+exception Nothing
+
+let main t l file_name =
+  (* Always return a result from parsing/lexing, but note if an exception
+     occurred. *)
+  let parsing_exception = ref Nothing in
+  let t l =
+    try t l
     with
-    | e ->
-      Parsing.clear_parser ();
-      raise e in
-  match r with
-  | {file_contents = {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items; _}
-    when nopatch ver >= (2, 1) ->
-      let opam_version_variable = function
-      | {pelem = Variable({pelem = "opam-version"; _}, _); _} -> true
-      | _ -> false
-      in
-        (* For opam-version: 2.1 and later, there must be no other opam-version
-           fields. *)
-        if List.exists opam_version_variable items then
-          raise Parsing.Parse_error;
+    | Sys.Break
+    | Assert_failure _
+    | Match_failure _ as e -> raise e
+    | e -> parsing_exception := e; EOF
+  in
+    let r =
+      try with_clear_parser (main t l) file_name
+      with Parsing.Parse_error as e ->
+        parsing_exception := e;
+        (* Record the tokens captured so far *)
+        let r = {file_contents = List.rev !parsed_so_far; file_name} in
+        parsed_so_far := [];
         r
-  | {file_contents = items; _} ->
-      let opam_version_greater_2_0 = function
-      | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _} ->
-          nopatch ver > (2, 0)
-      | _ -> false
-      in
-        (* opam-version: 2.1 or later must be the first item. *)
-        if List.exists opam_version_greater_2_0 items then
-          raise Parsing.Parse_error;
-        r
+    in
+    match r with
+    | {file_contents = {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items; _}
+      when nopatch ver >= (2, 1) ->
+        let opam_version_variable = function
+        | {pelem = Variable({pelem = "opam-version"; _}, _); _} -> true
+        | _ -> false
+        in
+          (* For opam-version: 2.1 and later, there must be no other opam-version
+             fields. *)
+          if List.exists opam_version_variable items then
+            raise Parsing.Parse_error;
+          (* Parsing and lexing errors from future versions of opam are ignored:
+             the intent is that the tool will abort/ignore because of the
+             opam-version field rather than through lexer/parser errors. *)
+          if !parsing_exception != Nothing && nopatch ver <= version then
+            raise !parsing_exception;
+          r
+    | {file_contents = items; _} ->
+        let opam_version_greater_2_0 = function
+        | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _} ->
+            nopatch ver > (2, 0)
+        | _ -> false
+        in
+          (* opam-version: 2.1 or later must be the first item. *)
+          if List.exists opam_version_greater_2_0 items then
+            raise Parsing.Parse_error;
+          (* If no opam-version field was given, all exceptions must be
+             raised. *)
+          if !parsing_exception != Nothing then
+            raise !parsing_exception;
+          r
 
 let value t l =
   try
