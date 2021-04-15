@@ -10,12 +10,41 @@
 
 module A = Alcotest
 
-let tests = [
-  (let n = "opam-version > 2.0 not at start 1" in
-   n, (fun () -> A.check_raises n Parsing.Parse_error (fun () -> OpamParser.FullPos.string "version: \"2.1\"\nopam-version: \"2.1\"" "broken.opam" |> ignore)));
-  (let n = "opam-version > 2.1 repeated" in
-   n, (fun () -> A.check_raises n Parsing.Parse_error (fun () -> OpamParser.FullPos.string "opam-version: \"2.1\"\nopam-version: \"2.1\"" "broken.opam" |> ignore)));
-]
+let tests_exn = [
+  "opam-version > 2.0 not at start 1",
+  {|
+version: "2.1"
+opam-version: "2.1"
+  |};
+  "opam-version > 2.1 repeated",
+  {|
+opam-version: "2.1"
+opam-version: "2.1"
+  |};
+  "no opam-version and parsing error",
+  {|
+build: [ "echo"
+  |};
+  "opam-version 2.1 and parsing error",
+  {|
+opam-version: "2.1"
+build: [ "echo"
+  |};
+] |> List.map (fun (name, content) ->
+    name, (fun () ->
+        A.check_raises name Parsing.Parse_error (fun () ->
+            OpamParser.FullPos.string content "broken.opam" |> ignore)))
+
+let tests_noexn = [
+  "opam-version 2.2 and parsing error",
+  {|
+opam-version: "2.2"
+build: [ "echo"
+  |};
+] |> List.map (fun (name, content) ->
+    name, (fun () ->
+        A.check A.unit name ()
+          (OpamParser.FullPos.string content "broken.opam" |> ignore)))
 
 let tests =
-  ["opam-version", tests]
+  ["opam-version", tests_exn @ tests_noexn]
