@@ -26,6 +26,14 @@ let get_pos_full ?(s=1) n =
 
 let get_pos n = get_pos_full ~s:n n
 
+let parsed_so_far = ref []
+
+let record_token t =
+  parsed_so_far := t :: !parsed_so_far; t
+
+(* This must match up with the package's version; checked by the build system *)
+let version = (2, 1)
+
 %}
 
 %token <string> STRING IDENT
@@ -61,7 +69,7 @@ let get_pos n = get_pos_full ~s:n n
 %%
 
 main:
-| items EOF { fun file_name ->
+| items EOF { parsed_so_far := []; fun file_name ->
         { file_contents = $1; file_name } }
 ;
 
@@ -72,12 +80,14 @@ items:
 
 item:
 | IDENT COLON value                {
+  record_token
   { pos = get_pos_full 3;
     pelem =
       Variable ({ pos = get_pos 1; pelem =  $1 }, $3);
   }
 }
 | IDENT LBRACE items RBRACE {
+  record_token
   { pos = get_pos_full 4;
     pelem =
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
@@ -88,6 +98,7 @@ item:
   }
 }
 | IDENT STRING LBRACE items RBRACE {
+  record_token
   { pos = get_pos_full 4;
     pelem =
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
@@ -127,15 +138,104 @@ atom:
 
 %%
 
-let main t l f =
+let nopatch v =
+  let s =
   try
-    let r = main t l f in
+    let i = String.index v '.' in
+    let i = String.index_from v (i+1) '.' in
+    (String.sub v 0 i)
+  with Not_found ->
+    let rec f i =
+      if i >= String.length v then v
+      else match String.get v i with
+        | '0'..'9' | '.' -> f (i+1)
+        | _ -> String.sub v 0 i
+    in
+    f 0
+  in
+    try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
+    with Scanf.Scan_failure _ -> (0, 0)
+
+let with_clear_parser f x =
+  try
+    let r = f x in
     Parsing.clear_parser ();
     r
-  with
-  | e ->
+  with e ->
     Parsing.clear_parser ();
     raise e
+
+exception Nothing
+
+let reset_lexbuf l file_name (start_line, start_col) (end_line, end_col) =
+  let open Lexing in
+  l.lex_start_p <- {pos_fname = file_name; pos_lnum = start_line; pos_bol = 0; pos_cnum = start_col};
+  l.lex_curr_p <- {pos_fname = file_name; pos_lnum = end_line; pos_bol = 0; pos_cnum = end_col};
+  true
+
+let main t l file_name =
+  (* Always return a result from parsing/lexing, but note if an exception
+     occurred. *)
+  let parsing_exception = ref Lexing.(Nothing, dummy_pos, dummy_pos) in
+  let raise_if_parsing_failed = function
+  | false -> ()
+  | true ->
+      match parsing_exception with
+      | {contents = (Nothing, _, _)} -> ()
+      | {contents = (e, start, curr)} ->
+          let open Lexing in
+          l.lex_start_p <- start;
+          l.lex_curr_p <- curr;
+          raise e
+  in
+  let t l =
+    try t l
+    with
+    | Sys.Break
+    | Assert_failure _
+    | Match_failure _ as e -> raise e
+    | e -> parsing_exception := Lexing.(e, l.lex_start_p, l.lex_curr_p); EOF
+  in
+    let r =
+      try with_clear_parser (main t l) file_name
+      with Parsing.Parse_error as e ->
+        parsing_exception := Lexing.(e, l.lex_start_p, l.lex_curr_p);
+        (* Record the tokens captured so far *)
+        let r = {file_contents = List.rev !parsed_so_far; file_name} in
+        parsed_so_far := [];
+        r
+    in
+    match r with
+    | {file_contents = {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items; _}
+      when nopatch ver >= (2, 1) ->
+        let opam_version_variable = function
+        | {pelem = Variable({pelem = "opam-version"; _}, _); pos = {start; stop; _}} ->
+            reset_lexbuf l file_name start stop
+        | _ -> false
+        in
+          (* For opam-version: 2.1 and later, there must be no other opam-version
+             fields. *)
+          if List.exists opam_version_variable items then
+            raise Parsing.Parse_error;
+          (* Parsing and lexing errors from future versions of opam are ignored:
+             the intent is that the tool will abort/ignore because of the
+             opam-version field rather than through lexer/parser errors. *)
+          raise_if_parsing_failed (nopatch ver <= version);
+          r
+    | {file_contents = items; _} ->
+        let opam_version_greater_2_0 = function
+        | {pelem = Variable({pelem = "opam-version"; _}, {pelem = String ver; _}); pos = {start; stop; _}}
+          when nopatch ver > (2, 0) ->
+            reset_lexbuf l file_name start stop
+        | _ -> false
+        in
+          (* opam-version: 2.1 or later must be the first item. *)
+          if List.exists opam_version_greater_2_0 items then
+            raise Parsing.Parse_error;
+          (* If no opam-version field was given, all exceptions must be
+             raised. *)
+          raise_if_parsing_failed true;
+          r
 
 let value t l =
   try

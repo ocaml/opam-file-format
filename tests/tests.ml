@@ -12,7 +12,7 @@ module A = Alcotest
 
 let _ =
   let tests =
-    Oldpos.tests @ Fullpos.tests
+    Oldpos.tests @ Fullpos.tests @ Versions.tests
     |> List.map (fun (n,t) ->
         n, List.map (fun (n,t) -> n, `Quick, t) t)
   in
