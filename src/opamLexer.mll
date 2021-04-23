@@ -138,6 +138,13 @@ rule token = parse
 | pfxop  { PFXOP (FullPos.pfxop (Lexing.lexeme lexbuf)) }
 | envop  { ENVOP (FullPos.env_update_op (Lexing.lexeme lexbuf)) }
 | eof    { EOF }
+(* OpamBaseParser can't directly access OpamLexer.Error so it uses these
+   constants (which would parse that way) to extract the exception values.
+ *)
+| "opam-version: \"2.1\"\nopam-version: \"z\"" eof
+         { error "opam-version cannot be repeated" }
+| "version: \"42\"\nopam-version: \"2.1\"" eof
+         { error "opam-version must be the first non-comment line" }
 | _      { let token = Lexing.lexeme lexbuf in
            error "'%s' is not a valid token" token }
 
