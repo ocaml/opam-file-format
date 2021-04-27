@@ -172,6 +172,20 @@ let not_fatal = function
 | Match_failure _ -> false
 | _ -> true
 
+let get_three_tokens lexer lexbuf = 
+  let open Lexing in
+  try
+    let p0 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
+    let t1 = lexer lexbuf in
+    let p1 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
+    let t2 = lexer lexbuf in
+    let p2 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
+    let t3 = lexer lexbuf in
+    let p3 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
+    ((p0, p1, p2, p3), (t1, t2, t3))
+  with
+  | e when not_fatal e -> raise Parsing.Parse_error
+
 (* Wrap the ocamlyacc parser *)
 let main lexer lexbuf file_name =
   (* Extract the exceptions for opam-version not at the top of the file and
@@ -205,18 +219,7 @@ let main lexer lexbuf file_name =
   (* Now parse the header of the file manually. The smallest valid opam file
      is `ident: atom`, so if we can't read three tokens we have a parse error *)
   let ((((_, p0) as initial_pos), ((_, p1) as pos1), ((_, p2) as pos2), ((_, p3) as pos3)), (t1, t2, t3)) =
-    let open Lexing in
-    try
-      let p0 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
-      let t1 = lexer lexbuf in
-      let p1 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
-      let t2 = lexer lexbuf in
-      let p2 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
-      let t3 = lexer lexbuf in
-      let p3 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
-      ((p0, p1, p2, p3), (t1, t2, t3))
-    with
-    | e when not_fatal e -> raise Parsing.Parse_error
+    get_three_tokens lexer lexbuf
   in
   (* Parse those three tokens if they are [opam-version: ver] *)
   let (header, format_2_1_or_greater, trap_exceptions) =
