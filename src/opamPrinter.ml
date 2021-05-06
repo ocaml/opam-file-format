@@ -546,8 +546,32 @@ module FullPos = struct
            | None -> "")
           (String.concat "\n" (List.map item s.section_items.pelem))
 
+    (* The code duplication with OpamBaseParser is irritating, but can't be solved
+       without introducing another module. *)
+    let nopatch v =
+      let s =
+      try
+        let i = String.index v '.' in
+        let i = String.index_from v (i+1) '.' in
+        (String.sub v 0 i)
+      with Not_found ->
+        let rec f i =
+          if i >= String.length v then v
+          else match String.get v i with
+            | '0'..'9' | '.' -> f (i+1)
+            | _ -> String.sub v 0 i
+        in
+        f 0
+      in
+        try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
+        with Scanf.Scan_failure _ -> (0, 0)
+
     let item_order a b =
       match a.pelem ,b.pelem with
+      | Variable ({pelem = "opam-version"; _}, {pelem = String ver; _}), _
+        when nopatch ver >= (2, 1) -> -1
+      | _, Variable ({pelem = "opam-version"; _}, {pelem = String ver; _})
+        when nopatch ver >= (2, 1) -> 1
       | Section _, Variable _ -> 1
       | Variable _, Section _ -> -1
       | Variable (i,_), Variable (j,_) -> String.compare i.pelem j.pelem
