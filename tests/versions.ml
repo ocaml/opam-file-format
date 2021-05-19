@@ -10,6 +10,25 @@
 
 module A = Alcotest
 
+exception IA
+
+let tests_corrupt =
+  let minimal =
+    {|
+opam-version: "2.1"
+version: "2.1"
+    |}
+  in
+  let opamfile = OpamParser.FullPos.string minimal "corrupt.opam" in
+  let corrupt = OpamParserTypes.FullPos.({opamfile with file_contents = List.rev opamfile.file_contents}) in
+  [
+    "OpamPrinter.FullPos.opamfile", OpamPrinter.FullPos.opamfile;
+    "OpamPrinter.FullPos.Normalise.opamfile", OpamPrinter.FullPos.Normalise.opamfile
+] |> List.map (fun (name, f) ->
+    name, (fun () ->
+        A.check_raises name IA (fun () ->
+            try ignore (f corrupt) with Invalid_argument _ -> raise IA)))
+
 let tests_exn = [
   "opam-version > 2.0 not at start 1", OpamLexer.Error("opam-version must be the first non-comment line"),
   {|
@@ -80,4 +99,4 @@ opam-version: "42.0"
            |> has_sentinel)))
 
 let tests =
-  ["opam-version", tests_exn @ tests_noexn]
+  ["opam-version", tests_corrupt @ tests_exn @ tests_noexn]
