@@ -61,16 +61,26 @@ module FullPos : sig
       newlines}. *)
 
   val items: opamfile_item list -> string
+  (** Converts a list of opam field/sections to a string.
+
+      @raise Invalid_argument if ["opam-version"] is greater than "2.0"
+                              and not solely the first item. *)
 
   val opamfile: opamfile -> string
-  (** Converts an {!opamfile} to a string. *)
+  (** Converts an {!opamfile} to a string.
+
+      @raise Invalid_argument if ["opam-version"] is greater than "2.0"
+                              and not solely the first item. *)
 
   val format_opamfile: Format.formatter -> opamfile -> unit
   (** Writes an {!opamfile} to a [Format.formatter]. The function ensures that all
       newlines are sent using [Format]'s break instructions (and so ultimately are
       processed with the [out_newline] function of the formatter) but it is the
       responsibility of the caller to ensure that the formatter is configured for
-      the required output, if necessary. *)
+      the required output, if necessary.
+
+      @raise Invalid_argument if ["opam-version"] is greater than "2.0"
+                              and not solely the first item. *)
 
   (** {2 Normalised output for opam syntax files} *)
 
@@ -106,12 +116,20 @@ module FullPos : sig
     (** [items str orig_its its] converts [its] to string, while attempting to
         preserve the layout and comments of the original [str] for unmodified
         elements. The function assumes that [str] parses to the items
-        [orig_its]. *)
+        [orig_its].
+
+        @raise Invalid_argument if ["opam-version"] is greater than "2.0"
+                                and not solely the first item in either list. *)
 
     val opamfile: ?format_from:file_name -> opamfile -> string
     (** [opamfile f] converts [f] to string, respecting the layout and comments in
         the corresponding on-disk file for unmodified items. [format_from] can be
-        specified instead of using the filename specified in [f]. *)
+        specified instead of using the filename specified in [f].
+
+        @raise Invalid_argument if ["opam-version"] is greater than "2.0"
+                                and not solely the first item in the list. Note that
+                                any errors in the file raise {!OpamLexer.Error} as
+                                normal. *)
   end
 
   (** {2 Random utility functions} *)
