@@ -11,6 +11,43 @@
 
 open OpamParserTypes
 
+(* The code duplication with OpamBaseParser is irritating, but can't be solved
+   without introducing another module. *)
+let nopatch v =
+  let s =
+  try
+    let i = String.index v '.' in
+    let i = String.index_from v (i+1) '.' in
+    (String.sub v 0 i)
+  with Not_found ->
+    let rec f i =
+      if i >= String.length v then v
+      else match String.get v i with
+        | '0'..'9' | '.' -> f (i+1)
+        | _ -> String.sub v 0 i
+    in
+    f 0
+  in
+    try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
+    with Scanf.Scan_failure _ -> (0, 0)
+
+let valid_opamfile_contents = function
+| (Variable (_, "opam-version", String (_, ver)))::items
+    when nopatch ver >= (2, 1) ->
+      let opam_version_field = function
+      | Variable (_, "opam-version", _) -> true
+      | _ -> false
+      in
+        not (List.exists opam_version_field items)
+| _::items ->
+    let greater_2_0_opam_version_field = function
+    | Variable (_, "opam-version", String (_, ver))
+       when nopatch ver >= (2, 1) -> true
+    | _ -> false
+    in
+      not (List.exists greater_2_0_opam_version_field items)
+| [] -> true
+
 let relop = function
   | `Eq  -> "="
   | `Neq -> "!="
@@ -134,6 +171,8 @@ let format_opamfile fmt f =
   Format.pp_print_newline fmt ()
 
 let items l =
+  if not (valid_opamfile_contents l) then
+    invalid_arg "OpamPrinter.items";
   format_items Format.str_formatter l; Format.flush_str_formatter ()
 
 let opamfile f =
@@ -223,6 +262,10 @@ module Normalise = struct
         (String.concat "\n" (List.map item s.section_items))
 
   let item_order a b = match a,b with
+    | Variable (_, "opam-version", String (_, ver)), _
+      when nopatch ver >= (2, 1) -> -1
+    | _, Variable (_, "opam-version", String (_, ver))
+      when nopatch ver >= (2, 1) -> 1
     | Section _, Variable _ -> 1
     | Variable _, Section _ -> -1
     | Variable (_,i,_), Variable (_,j,_) -> String.compare i j
@@ -232,6 +275,8 @@ module Normalise = struct
       else compare s.section_name t.section_name
 
   let items its =
+    if not (valid_opamfile_contents its) then
+      invalid_arg "OpamPrinter.Normalise.items";
     let its = List.sort item_order its in
     String.concat "\n" (List.map item its) ^ "\n"
 
@@ -240,6 +285,8 @@ end
 
 module Preserved = struct
   let items txt orig f =
+    if not (valid_opamfile_contents f) then
+      invalid_arg "OpamPrinter.Preserved.items";
     let pos_index =
       let lines_index =
         let rec aux acc s =
@@ -328,6 +375,23 @@ end
 module FullPos = struct
 
   open OpamParserTypes.FullPos
+
+  let valid_opamfile_contents = function
+  | {pelem = Variable ({pelem = "opam-version"; _}, {pelem = String ver; _}); _}::items
+      when nopatch ver >= (2, 1) ->
+        let opam_version_field = function
+        | {pelem = Variable ({pelem = "opam-version"; _}, _); _} -> true
+        | _ -> false
+        in
+          not (List.exists opam_version_field items)
+  | _::items ->
+      let greater_2_0_opam_version_field = function
+      | {pelem = Variable ({pelem = "opam-version"; _}, {pelem = String ver; _}); _}
+         when nopatch ver >= (2, 1) -> true
+      | _ -> false
+      in
+        not (List.exists greater_2_0_opam_version_field items)
+  | [] -> true
 
   let relop_kind = relop
   let relop r = relop_kind r.pelem
@@ -433,6 +497,8 @@ module FullPos = struct
     Format.pp_print_newline fmt ()
 
   let items l =
+    if not (valid_opamfile_contents l) then
+      invalid_arg "OpamPrinter.FullPos.items";
     format_items Format.str_formatter l; Format.flush_str_formatter ()
 
   let opamfile f =
@@ -548,6 +614,10 @@ module FullPos = struct
 
     let item_order a b =
       match a.pelem ,b.pelem with
+      | Variable ({pelem = "opam-version"; _}, {pelem = String ver; _}), _
+        when nopatch ver >= (2, 1) -> -1
+      | _, Variable ({pelem = "opam-version"; _}, {pelem = String ver; _})
+        when nopatch ver >= (2, 1) -> 1
       | Section _, Variable _ -> 1
       | Variable _, Section _ -> -1
       | Variable (i,_), Variable (j,_) -> String.compare i.pelem j.pelem
@@ -557,6 +627,8 @@ module FullPos = struct
         else compare s.section_name t.section_name
 
     let items its =
+      if not (valid_opamfile_contents its) then
+        invalid_arg "OpamPrinter.Normalise.items";
       let its = List.sort item_order its in
       String.concat "\n" (List.map item its) ^ "\n"
 
@@ -565,6 +637,8 @@ module FullPos = struct
 
   module Preserved = struct
     let items txt orig f =
+      if not (valid_opamfile_contents f) then
+        invalid_arg "OpamPrinter.Preserved.items";
       let pos_index =
         let lines_index =
           let rec aux acc s =
