@@ -4,7 +4,8 @@
   item. If opam-version is at the start and is greater than the library version,
   `OpamLexer.Error` and `Parsing.Parse_error` are no longer raised; instead the
   opam-version variable is returned along with an invalid group to signal the
-  parsing error, giving the client enough information to act. [#43, #44 @dra27]
+  parsing error, giving the client enough information to act.
+  [#43, #44, #45 @dra27]
 
 2.1.2 [07 Jan 2021]
 * Some hash-consing for strings [#27 @AltGr]
