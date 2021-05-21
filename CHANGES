@@ -1,4 +1,6 @@
-2.1.3 [???]
+2.1.4 [???]
+
+2.1.3 [21 May 2021]
 * Fix module link order (broken by #37) [#41 @dra27]
 * opam-version: "2.1" must appear at most once and as the first non-comment
   item. If opam-version is at the start and is greater than the library version,
