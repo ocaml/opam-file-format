@@ -28,8 +28,14 @@ let nopatch v =
     in
     f 0
   in
-    try Scanf.sscanf s "%u.%u" (fun maj min -> (maj, min))
-    with Scanf.Scan_failure _ -> (0, 0)
+    try Scanf.sscanf s "%u.%u%!" (fun maj min -> (maj, min))
+    with Scanf.Scan_failure _
+       | Failure _
+       | End_of_file ->
+           try Scanf.sscanf s "%u%!" (fun maj -> (maj, 0))
+           with Scanf.Scan_failure _
+              | Failure _
+              | End_of_file -> (0, 0)
 
 let valid_opamfile_contents = function
 | (Variable (_, "opam-version", String (_, ver)))::items

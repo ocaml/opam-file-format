@@ -72,6 +72,11 @@ let has_sentinel =
     | _ -> false
 
 let tests_noexn = [
+  "opam-version 4 and parsing error",
+  {|
+opam-version: "4"
+!!
+  |};
   "opam-version 42.0 and parsing error",
   {|
 opam-version: "42.0"
