@@ -1,4 +1,5 @@
-2.1.4 [???]
+2.1.4 [12 April 2022]
+* Fix position in the sections parser [#46 @hhugo]
 
 2.1.3 [21 May 2021]
 * Fix module link order (broken by #37) [#41 @dra27]
