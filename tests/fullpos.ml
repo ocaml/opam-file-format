@@ -469,7 +469,7 @@ module Opamfile = struct
                { pos = spos (2, 8) (2, 13);
                  pelem = String "foo" });
         };
-        { pos = spos (4, 0) (5, 29);
+        { pos = spos (4, 0) (6, 1);
           pelem =
             Section
               { section_kind =
