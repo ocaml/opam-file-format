@@ -92,7 +92,7 @@ item:
   }
 }
 | IDENT STRING LBRACE items RBRACE {
-  { pos = get_pos_full 4;
+  { pos = get_pos_full 5;
     pelem =
       Section ({section_kind = { pos = get_pos 1; pelem = $1 };
                 section_name = Some { pos = get_pos 2; pelem = $2 };
