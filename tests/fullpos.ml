@@ -448,6 +448,28 @@ module Opamfile = struct
           (print_ofile (parse_ofile str)))
       t
 
+  let test_printer_preserved t () =
+    let write_tmp content ~f =
+      let file, oc = Filename.open_temp_file "opam-test-" ".opam" in
+      output_string oc content;
+      close_out oc;
+      let res = f file in
+      Sys.remove file;
+      res
+    in
+    let opamfile = OpamPrinter.FullPos.Preserved.opamfile in
+    List.iter (fun (name, str, _) ->
+        let file = parse_ofile str in
+        let content1 = write_tmp str ~f:(fun tmp ->
+            opamfile ~format_from:tmp file)
+        in
+        let content2 = write_tmp content1 ~f:(fun tmp ->
+            opamfile ~format_from:tmp file)
+        in
+        A.check A.string name content1 content2
+        )
+      t
+
   let positions () =
     let filename = Sys.getcwd () ^ "/sample.opam" in
     let spos start stop = {filename; start; stop } in
@@ -501,6 +523,7 @@ module Opamfile = struct
       "parser", test_parser (opamfiles @ opamfiles_comment);
       "printer", test_printer opamfiles;
       "parser-printer", test_parser_printer opamfiles;
+      "printer-preserved", test_printer_preserved opamfiles_comment;
       "positions-file", positions;
     ]
 

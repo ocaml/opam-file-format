@@ -713,16 +713,13 @@ module FullPos = struct
           in
           List.rev_append acc remaining
       in
+      let body = String.concat "\n" (aux [] f orig) in
       let header =
         match orig with
-        | [] -> []
-        | h::_ ->
-          let header =
-            get_substring {filename=""; start=(1,0); stop=h.pos.start}
-          in
-          if header = "" then [] else [header]
+        | [] -> ""
+        | h::_ -> get_substring {filename=""; start=(1,0); stop=h.pos.start}
       in
-      String.concat "\n" (aux header f orig)
+      header ^ body
 
     let opamfile ?format_from f =
       let orig_file = match format_from with

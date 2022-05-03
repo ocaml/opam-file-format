@@ -1,3 +1,6 @@
+2.1.5
+* Fix extra lines on non empty headers [#49 @hhugo]
+
 2.1.4 [12 April 2022]
 * Fix position in the sections parser [#46 @hhugo]
 
