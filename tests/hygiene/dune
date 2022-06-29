@@ -1,16 +1,14 @@
-(copy_files ../../src/opamParserTypes.ml)
-
 (test
-  (name opamBaseParser)
+  (name opamBaseParserForTest)
   (libraries opam-file-format)
-  (modules OpamParserTypes OpamBaseParser)
+  (modules OpamBaseParserForTest)
   (flags :standard (:include flags.sexp))
   (action (run %{test} %{version:opam-file-format})))
 
-(ocamlyacc OpamBaseParser)
+(ocamlyacc OpamBaseParserForTest)
 
 (rule
-  (with-stdout-to OpamBaseParser.mly
+  (with-stdout-to OpamBaseParserForTest.mly
     (progn (cat ../../src/opamBaseParser.mly)
            ; If this assertion fails, OpamBaseParser.version is wrong
            (echo "let () = assert (Scanf.sscanf Sys.argv.(1) \"%u.%u\" (fun x y -> (x, y)) = version)"))))
