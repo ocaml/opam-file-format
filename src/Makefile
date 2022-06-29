@@ -3,12 +3,17 @@ all: opam-file-format.cmxa opam-file-format.cma
 %.ml: %.mll
 	ocamllex $<
 
-OCAML_VERSION:=$(shell ocamlc -vnum | tr -d '\r' | sed -e 's/+.*//' -e 's/\.//g')
+EMPTY=
+SPACE=$(EMPTY) $(EMPTY)
+OCAML_VERSION:=$(firstword $(subst ~, ,$(subst +, ,$(shell ocamlc -version))))
 ifeq ($(OCAML_VERSION),)
 OCAML_VERSION:=0
+else
+OCAML_VERSION:=$(subst ., ,$(OCAML_VERSION))
+OCAML_VERSION:=$(subst $(SPACE),,$(firstword $(OCAML_VERSION))$(foreach i,$(wordlist 2,$(words $(OCAML_VERSION)),$(OCAML_VERSION)),$(if $(filter 0 1 2 3 4 5 6 7 8 9,$(i)),0,)$(i)))
 endif
 
-ifeq ($(shell test $(OCAML_VERSION) -ge 4022 || echo no-attributes),)
+ifeq ($(shell test $(OCAML_VERSION) -ge 40202 || echo no-attributes),)
 PP=
 else
 PP=-pp 'sed -e s/\\[@@\\?ocaml[^]]*\\]//'
