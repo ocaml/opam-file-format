@@ -1,5 +1,8 @@
-2.1.5
+2.1.5 [14 December 2022]
+------------------------
 * Fix extra lines on non empty headers [#49 @hhugo]
+* Make the tests flambda2-ready [#52 @lthls]
+* Fix build failure on OCaml 5.0 when using the non-dune build mode [#50 @dra27]
 
 2.1.4 [12 April 2022]
 ---------------------
