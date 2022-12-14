@@ -2,7 +2,6 @@
 
 (test
   (name opamBaseParser)
-  (libraries opam-file-format)
   (modules OpamParserTypes OpamBaseParser)
   (flags :standard (:include flags.sexp))
   (action (run %{test} %{version:opam-file-format})))
