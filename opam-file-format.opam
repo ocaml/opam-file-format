@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "2.1.4"
+version: "2.1.5"
 synopsis: "Parser and printer for the opam file syntax"
 maintainer: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
 authors: "Louis Gesbert <louis.gesbert@ocamlpro.com>"
