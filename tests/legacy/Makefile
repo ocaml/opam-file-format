@@ -1,5 +1,9 @@
 .PHONY: test
-test: legacy.byte legacy.native
+test:: legacy.byte
+
+ifneq "$(shell ocamlopt -vnum 2>/dev/null)" ""
+test:: legacy.native
+endif
 
 src/%:
 	$(MAKE) -C src $*
