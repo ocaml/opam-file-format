@@ -14,7 +14,7 @@ build: [
 ]
 install: [make "install" "PREFIX=%{prefix}%"] {!dune:installed}
 depends: [
-  "ocaml"
+  "ocaml" {>= "3.09.0"}
   "alcotest" {with-test}
 ]
 depopts: [
