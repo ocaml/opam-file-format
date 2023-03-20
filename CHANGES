@@ -1,3 +1,7 @@
+2.1.6 [20 March 2023]
+------------------------
+* Remove deprecated usage of `Printf.ksprintf`, ocaml 5 compatibility
+
 2.1.5 [14 December 2022]
 ------------------------
 * Fix extra lines on non empty headers [#49 @hhugo]
