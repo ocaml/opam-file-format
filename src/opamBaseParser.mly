@@ -41,13 +41,11 @@ let version = (2, 1)
 %token <OpamParserTypes.FullPos.pfxop_kind> PFXOP
 %token <OpamParserTypes.FullPos.env_update_op_kind> ENVOP
 
-%left COLON
 %left ATOM
 %left OR
 %left AND
-%nonassoc ENVOP
 %nonassoc PFXOP
-%left LBRACE RBRACE
+%left LBRACE
 %nonassoc RELOP
 
 %start main value
