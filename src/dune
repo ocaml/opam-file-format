@@ -12,7 +12,7 @@
  (enabled_if (>= %{ocaml_version} "4.03"))
  (action (with-stdout-to flags.sexp (echo "()"))))
 
-(ocamlyacc opamBaseParser)
+(menhir (modules opamBaseParser) (infer false))
 (ocamllex opamLexer)
 
 (env (dev

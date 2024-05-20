@@ -6,7 +6,7 @@
   (flags :standard (:include flags.sexp))
   (action (run %{test} %{version:opam-file-format})))
 
-(ocamlyacc OpamBaseParser)
+(menhir (modules OpamBaseParser) (infer false))
 
 (rule
   (with-stdout-to OpamBaseParser.mly

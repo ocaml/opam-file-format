@@ -15,17 +15,12 @@ open OpamParserTypes.FullPos
 
 (** Opam config file generic type parser *)
 
-let pos_of_lexing_pos spos epos =
+let get_pos spos epos =
   Lexing.({
     filename = spos.pos_fname;
     start = spos.pos_lnum, spos.pos_cnum - spos.pos_bol;
     stop = epos.pos_lnum, epos.pos_cnum - epos.pos_bol;
   })
-
-let get_pos_full ?(s=1) n =
-  pos_of_lexing_pos (Parsing.rhs_start_pos s) (Parsing.rhs_end_pos n)
-
-let get_pos n = get_pos_full ~s:n n
 
 (* This must match up with the package's version; checked by the build system *)
 let version = (2, 1)
@@ -59,15 +54,17 @@ let version = (2, 1)
 %start main value
 %type <string -> OpamParserTypes.FullPos.opamfile> main
 %type <OpamParserTypes.FullPos.value> value
+%type <OpamParserTypes.FullPos.value> valu_
 %type <OpamParserTypes.FullPos.value list> values
 %type <OpamParserTypes.FullPos.opamfile_item> item
+%type <OpamParserTypes.FullPos.value> atom
+%type <OpamParserTypes.FullPos.opamfile_item list> items
 
 %%
 
-main:
-| items EOF { fun file_name ->
-        { file_contents = $1; file_name } }
-;
+/* Exported values (must have an End Of File token) */
+main: items EOF { fun file_name -> { file_contents = $1; file_name } };
+value: valu_ EOF { $1 };
 
 items:
 | item items { $1 :: $2 }
@@ -75,58 +72,61 @@ items:
 ;
 
 item:
-| IDENT COLON value                {
-  { pos = get_pos_full 3;
+| IDENT COLON valu_                {
+  { pos = get_pos $startpos($1) $endpos($3);
     pelem =
-      Variable ({ pos = get_pos 1; pelem =  $1 }, $3);
+      Variable ({ pos = get_pos $startpos($1) $endpos($1); pelem =  $1 }, $3);
   }
 }
 | IDENT LBRACE items RBRACE {
-  { pos = get_pos_full 4;
+  { pos = get_pos $startpos($1) $endpos($4);
     pelem =
-      Section ({section_kind = { pos = get_pos 1; pelem = $1 };
+      Section ({section_kind = { pos = get_pos $startpos($1) $endpos($1); pelem = $1 };
                 section_name = None;
                 section_items =
-                  { pos = get_pos_full ~s:2 4; pelem = $3 };
+                  { pos = get_pos $startpos($2) $endpos($4); pelem = $3 };
                })
   }
 }
 | IDENT STRING LBRACE items RBRACE {
-  { pos = get_pos_full 5;
+  { pos = get_pos $startpos($1) $endpos($5);
     pelem =
-      Section ({section_kind = { pos = get_pos 1; pelem = $1 };
-                section_name = Some { pos = get_pos 2; pelem = $2 };
+      Section ({section_kind = { pos = get_pos $startpos($1) $endpos($1); pelem = $1 };
+                section_name = Some { pos = get_pos $startpos($2) $endpos($2); pelem = $2 };
                 section_items =
-                  { pos = get_pos_full ~s:3 5; pelem = $4 };
+                  { pos = get_pos $startpos($3) $endpos($5); pelem = $4 };
                })
   }
 }
 ;
 
-value:
+/* Previously called "value" and directly exported.
+   However menhir handles end-of-stream differently compared to ocamlyacc.
+   Thus "value" (exported, handling end-of-stream) and "valu_" (internal, does not handle end-of-stream) had to be created */
+valu_:
 | atom            %prec ATOM { $1 }
-| LPAR values RPAR           {{ pos = get_pos_full 3 ; pelem = Group { pos = get_pos_full ~s:1 3; pelem = $2 } }}
-| LBRACKET values RBRACKET   {{ pos = get_pos_full 3 ; pelem = List { pos = get_pos_full ~s:1 3; pelem = $2 } }}
-| value LBRACE values RBRACE {{ pos = get_pos_full 4 ;
-                                pelem = Option ($1, { pos = get_pos_full ~s:2 4; pelem = $3 }) }}
-| value AND value            {{ pos = get_pos_full 3 ; pelem = Logop ({ pos = get_pos 2 ; pelem = `And },$1,$3) }}
-| value OR value             {{ pos = get_pos_full 3 ; pelem = Logop ({ pos = get_pos 2 ; pelem = `Or },$1,$3) }}
-| atom RELOP atom            {{ pos = get_pos_full 3 ; pelem = Relop ({ pos = get_pos 2 ; pelem = $2 },$1,$3) }}
-| atom ENVOP atom            {{ pos = get_pos_full 3 ; pelem = Env_binding ($1,{ pos = get_pos 2 ; pelem = $2 },$3) }}
-| PFXOP value                {{ pos = get_pos_full 2 ; pelem = Pfxop ({ pos = get_pos 1 ; pelem = $1 },$2) }}
-| RELOP atom                 {{ pos = get_pos_full 2 ; pelem = Prefix_relop ({ pos = get_pos 1 ; pelem = $1 },$2) }}
+| LPAR values RPAR           {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = Group { pos = get_pos $startpos($1) $endpos($3); pelem = $2 } }}
+| LBRACKET values RBRACKET   {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = List { pos = get_pos $startpos($1) $endpos($3); pelem = $2 } }}
+| valu_ LBRACE values RBRACE {{ pos = get_pos $startpos($1) $endpos($4) ;
+                                pelem = Option ($1, { pos = get_pos $startpos($2) $endpos($4); pelem = $3 }) }}
+| valu_ AND valu_            {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = Logop ({ pos = get_pos $startpos($2) $endpos($2) ; pelem = `And },$1,$3) }}
+| valu_ OR valu_             {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = Logop ({ pos = get_pos $startpos($2) $endpos($2) ; pelem = `Or },$1,$3) }}
+| atom RELOP atom            {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = Relop ({ pos = get_pos $startpos($2) $endpos($2) ; pelem = $2 },$1,$3) }}
+| atom ENVOP atom            {{ pos = get_pos $startpos($1) $endpos($3) ; pelem = Env_binding ($1,{ pos = get_pos $startpos($2) $endpos($2) ; pelem = $2 },$3) }}
+| PFXOP valu_                {{ pos = get_pos $startpos($1) $endpos($2) ; pelem = Pfxop ({ pos = get_pos $startpos($1) $endpos($1) ; pelem = $1 },$2) }}
+| RELOP atom                 {{ pos = get_pos $startpos($1) $endpos($2) ; pelem = Prefix_relop ({ pos = get_pos $startpos($1) $endpos($1) ; pelem = $1 },$2) }}
 ;
 
 values:
 |                            { [] }
-| value values               { $1 :: $2 }
+| valu_ values               { $1 :: $2 }
 ;
 
 atom:
-| IDENT                      {{ pos = get_pos 1 ; pelem = Ident $1 }}
-| BOOL                       {{ pos = get_pos 1 ; pelem = Bool $1 }}
-| INT                        {{ pos = get_pos 1 ; pelem = Int $1 }}
-| STRING                     {{ pos = get_pos 1 ; pelem = String $1 }}
+| IDENT                      {{ pos = get_pos $startpos($1) $endpos($1) ; pelem = Ident $1 }}
+| BOOL                       {{ pos = get_pos $startpos($1) $endpos($1) ; pelem = Bool $1 }}
+| INT                        {{ pos = get_pos $startpos($1) $endpos($1) ; pelem = Int $1 }}
+| STRING                     {{ pos = get_pos $startpos($1) $endpos($1) ; pelem = String $1 }}
 ;
 
 %%
@@ -155,15 +155,6 @@ let nopatch v =
               | Failure _
               | End_of_file -> (0, 0)
 
-let with_clear_parser f x =
-  try
-    let r = f x in
-    Parsing.clear_parser ();
-    r
-  with e ->
-    Parsing.clear_parser ();
-    raise e
-
 (* Update a lexbuf with position information prior to raising an exception *)
 let reset_lexbuf_and_abort l file_name (start_line, start_col) (end_line, end_col) exn =
   let open Lexing in
@@ -178,7 +169,7 @@ let not_fatal = function
 | Match_failure _ -> false
 | _ -> true
 
-let get_three_tokens lexer lexbuf = 
+let get_three_tokens lexer lexbuf =
   let open Lexing in
   try
     let p0 = lexbuf.lex_start_p, lexbuf.lex_curr_p in
@@ -236,9 +227,9 @@ let main lexer lexbuf file_name =
              an exception to be raised before the element has been fully parsed.
              In this case, we generate a single opam-version Variable to return.
            *)
-          {pelem = Variable({pelem = "opam-version"; pos = pos_of_lexing_pos p0 p1},
-                             {pelem = String ver; pos = pos_of_lexing_pos p2 p3});
-           pos = pos_of_lexing_pos p0 p3}
+          {pelem = Variable({pelem = "opam-version"; pos = get_pos p0 p1},
+                             {pelem = String ver; pos = get_pos p2 p3});
+           pos = get_pos p0 p3}
         in
         (header, (nopatch ver >= (2, 1)), (nopatch ver > version))
     | _ ->
@@ -262,7 +253,7 @@ let main lexer lexbuf file_name =
           lexer lexbuf
   in
   let result =
-    try with_clear_parser (main lexer lexbuf) file_name
+    try main lexer lexbuf file_name
     with e when trap_exceptions && not_fatal e ->
       (* Append a syntactically invalid sentinel section "#" to the version
          header which was manually parsed. That is then sufficient
@@ -273,7 +264,7 @@ let main lexer lexbuf file_name =
          detect the parsing error. *)
       let sentinel =
         let pos =
-          Lexing.(pos_of_lexing_pos lexbuf.lex_start_p lexbuf.lex_curr_p)
+          Lexing.(get_pos lexbuf.lex_start_p lexbuf.lex_curr_p)
         in
         let section =
           {section_kind = {pelem = "#"; pos};
@@ -294,4 +285,10 @@ let main lexer lexbuf file_name =
   end;
   result
 
-let value t l = with_clear_parser (value t) l
+let main t l fn =
+  try main t l fn with
+  | Error -> raise Parsing.Parse_error
+
+let value t l =
+  try value t l with
+  | Error -> raise Parsing.Parse_error
