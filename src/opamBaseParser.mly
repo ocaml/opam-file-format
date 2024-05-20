@@ -49,7 +49,6 @@ let version = (2, 1)
 %nonassoc PFXOP
 %left LBRACE RBRACE
 %nonassoc RELOP
-%nonassoc URELOP
 
 %start main value
 %type <string -> OpamParserTypes.FullPos.opamfile> main
