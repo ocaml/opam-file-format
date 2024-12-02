@@ -1,7 +1,7 @@
 # opam-file-format - Parser and printer for the opam file syntax
 
 This library provides the parser and printer for the opam file syntax as a
-library with no dependencies but [Dune](https://dune.build) >= 1.3.
+library with no dependencies but [Dune](https://dune.build) >= 1.4.
 
 Opam was created and is maintained by [OCamlPro](http://www.ocamlpro.com).
 
