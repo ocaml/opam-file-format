@@ -23,7 +23,7 @@ let get_pos spos epos =
   })
 
 (* This must match up with the package's version; checked by the build system *)
-let version = (2, 1)
+let version = (2, 2)
 
 %}
 
