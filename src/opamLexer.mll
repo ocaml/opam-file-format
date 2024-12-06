@@ -84,7 +84,7 @@ let char_for_hexadecimal_code lexbuf i =
 (* Some hash-consing for strings *)
 module HS =
   Weak.Make(struct include String let hash = Hashtbl.hash let equal = (=) end)
-let hm = HS.create 317
+let hm = Domain.DLS.new_key (fun () -> HS.create 317)
 
 
 let buffer_rule r lb =
@@ -93,7 +93,7 @@ let buffer_rule r lb =
   r b lb ;
   (* buffer start position, instead of last lexem position *)
   lb.Lexing.lex_start_p <- pos;
-  HS.merge hm (Buffer.contents b)
+  HS.merge (Domain.DLS.get hm) (Buffer.contents b)
 }
 
 let eol = '\r'? '\n'
@@ -131,7 +131,7 @@ rule token = parse
 | "true" { BOOL true }
 | "false"{ BOOL false }
 | int    { INT (int_of_string (Lexing.lexeme lexbuf)) }
-| ident  { IDENT (HS.merge hm (Lexing.lexeme lexbuf)) }
+| ident  { IDENT (HS.merge (Domain.DLS.get hm) (Lexing.lexeme lexbuf)) }
 | relop  { RELOP (FullPos.relop (Lexing.lexeme lexbuf)) }
 | '&'    { AND }
 | '|'    { OR }
