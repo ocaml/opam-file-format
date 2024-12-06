@@ -1,3 +1,8 @@
+2.2.0~alpha1 [06 December 2024]
+-------------------------------
+* Remove the optional GNU Make build system in favour of Dune [#51 @kit-ty-kate]
+* Make the parser domain-safe by switching from ocamlyacc to menhir [#60 @kit-ty-kate]
+
 2.1.6 [20 March 2023]
 ------------------------
 * Remove deprecated usage of `Printf.ksprintf`, ocaml 5 compatibility
