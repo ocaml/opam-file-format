@@ -20,6 +20,7 @@ type relop = [ `Eq  (** [=] *)
              | `Gt  (** [>] *)
              | `Leq (** [<=] *)
              | `Lt  (** [<] *)
+             | `Sem (** [~] *)
              ]
 
 (** Logical operators *)
