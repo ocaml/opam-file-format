@@ -54,6 +54,7 @@ module Value = struct
     "greater-than",      ">",   `Gt;
     "lesser-or-equal",   "<=",  `Leq;
     "lesser-than",       "<",   `Lt;
+    "semver",            "~",   `Sem;
   ]
   let logop = [
     "disj",  "&",  `And;

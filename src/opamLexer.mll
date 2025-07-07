@@ -27,7 +27,7 @@ let relop = function
   | ">"  -> `Gt
   | "<=" -> `Leq
   | "<"  -> `Lt
-  | "~"  -> `Geq
+  | "~"  -> `Sem
   | x    -> error "%S is not a valid comparison operator" x
 
 let logop = function
