@@ -142,8 +142,6 @@ let value_list vl =
   Format.flush_str_formatter ()
 
 let rec format_item fmt = function
-  | Variable (_, _, List (_,[])) -> ()
-  | Variable (_, _, List (_,[List(_,[])])) -> ()
   | Variable (_, i, List (_,l)) ->
     if List.exists
         (function List _ | Option (_,_,_::_) -> true | _ -> false)
@@ -255,7 +253,6 @@ module Normalise = struct
         [value id; env_update_op op; value v]
 
   let rec item = function
-    | Variable (_, _, List (_,([]|[List(_,[])]))) -> ""
     | Variable (_, i, List (_,l)) ->
       Printf.sprintf "%s: [%s]" i (String.concat " " (List.map value l))
     | Variable (_, i, v) -> String.concat ": " [i; value v]
@@ -460,12 +457,6 @@ module FullPos = struct
 
   let rec format_item fmt i =
     match i.pelem with
-    | Variable (_, { pelem = List { pelem = []; _}; _}) -> ()
-    | Variable (_,
-                { pelem =
-                    List { pelem =
-                             [{ pelem =
-                                  List { pelem = []; _}; _}]; _}; _}) -> ()
     | Variable (i, { pelem = List { pelem = l; _}; _}) ->
       if List.exists
           (fun v ->
@@ -602,11 +593,6 @@ module FullPos = struct
 
     let rec item i =
       match i.pelem with
-      | Variable (_, { pelem = List { pelem = []; _}; _})
-      | Variable (_, { pelem =
-                         List { pelem =
-                                  [{ pelem = List { pelem = []; _}; _}]; _}; _})
-        -> ""
       | Variable (i, { pelem = List { pelem = l; _}; _}) ->
         Printf.sprintf "%s: [%s]" i.pelem (String.concat " " (List.map value l))
       | Variable (i, v) -> String.concat ": " [i.pelem; value v]
